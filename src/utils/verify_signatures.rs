@@ -86,7 +86,7 @@ impl AuditFinding {
 }
 
 #[derive(Debug, Clone, Default)]
-struct VerifiedAttestation {
+pub struct VerifiedAttestation {
     name: String,
     version: String,
     location: String,
@@ -120,6 +120,7 @@ struct Candidate {
     version: String,
     location: String,
     registry: String,
+    #[expect(dead_code, reason = "reported in the JSON findings")]
     r#type: String,
 }
 
