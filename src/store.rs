@@ -415,6 +415,17 @@ impl Store {
     }
 }
 
+/// A single repair `npm config fix` can apply.
+#[derive(Debug, Clone)]
+pub struct RepairProblem {
+    /// `rename` or `delete`.
+    pub action: &'static str,
+    pub key: String,
+    pub from: Option<String>,
+    pub to: Option<String>,
+    pub where_: ConfigSource,
+}
+
 fn parse_value(raw: &str) -> Value {
     match raw {
         "true" => Value::Bool(true),

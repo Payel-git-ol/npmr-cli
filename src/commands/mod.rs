@@ -236,7 +236,7 @@ pub fn create(name: &str) -> Result<Box<dyn Command>> {
         "repo" => Box::new(repo::Repo::new()),
         "restart" => Box::new(restart::Restart::new()),
         "root" => Box::new(root::Root::new()),
-        "run" => Box::new(run::Run::new()),
+        "run" => Box::new(run::RunScript::new()),
         "sbom" => Box::new(sbom::Sbom::new()),
         "search" => Box::new(search::Search::new()),
         "set" => Box::new(set::Set::new()),
