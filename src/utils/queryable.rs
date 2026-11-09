@@ -166,8 +166,8 @@ pub fn parse_selector(text: &str) -> Selector {
     let mut steps = Vec::new();
     let mut current = String::new();
     let mut in_attr = false;
-    let mut chars = text.chars().peekable();
-    while let Some(c) = chars.next() {
+    let chars = text.chars().peekable();
+    for c in chars {
         match c {
             '[' => {
                 in_attr = true;

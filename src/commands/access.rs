@@ -120,6 +120,7 @@ impl Access {
     }
 
     /// Prints the `item: value` table, honouring `--json`.
+    #[expect(dead_code, reason = "used once access commands get wired to the registry")]
     fn output(&self, npm: &dyn Npm, items: &BTreeMap<String, String>, limiter: Option<&str>) {
         let mut outputs = BTreeMap::new();
         for (item, value) in items {

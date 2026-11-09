@@ -11,9 +11,16 @@ pub static META: CommandMeta = CommandMeta::new("list", "List all staged package
     .with_usage(&["[<package-spec>]"])
     .with_params(&["json", "registry"]);
 
+#[expect(dead_code, reason = "pagination needs the staging registry client")]
 const PER_PAGE: usize = 100;
 
 pub struct StageList;
+
+impl Default for StageList {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl StageList {
     pub fn new() -> Self {

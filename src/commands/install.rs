@@ -71,7 +71,7 @@ pub fn install_args(npm: &dyn Npm, args: &[String]) -> Result<Vec<String>> {
     let mut args: Vec<String> = args
         .iter()
         .filter(|arg| {
-            let path = crate::utils::errors::resolve_path(&npm.local_prefix().to_path_buf(), arg);
+            let path = crate::utils::errors::resolve_path(npm.local_prefix(), arg);
             path != npm.prefix()
         })
         .cloned()

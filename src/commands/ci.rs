@@ -42,6 +42,12 @@ or later to generate a package-lock.json file, then try again.";
 
 pub struct Ci;
 
+impl Default for Ci {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Ci {
     pub fn new() -> Self {
         Self
@@ -76,7 +82,7 @@ impl Ci {
         }
         errors.extend(crate::utils::validate_lockfile::validate_npm_extension(&lock, None));
         if !errors.is_empty() {
-            return Err(META.usage_error(&format!(
+            return Err(META.usage_error(format!(
                 "`npm ci` can only install packages when your package.json and package-lock.json are in sync. \
                  Please update your lock file with `npm install` before continuing.\n\n{}",
                 errors.join("\n")

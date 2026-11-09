@@ -94,6 +94,7 @@ pub fn hosted_url(mani: &Value, kind: HostedKind) -> Option<String> {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[expect(dead_code, reason = "the raw https kind is not produced by the spec classifier")]
 pub enum HostedKind {
     Bugs,
     Docs,

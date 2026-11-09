@@ -180,7 +180,7 @@ pub fn run_mode(
         } else {
             "`--allow-scripts-pending`"
         };
-        return Err(meta.usage_error(&format!(
+        return Err(meta.usage_error(format!(
             "{what} cannot be combined with positional arguments or `--all`."
         )));
     }

@@ -41,9 +41,7 @@ impl PackageUrlCommand for Repo {
             _ => None,
         };
         let Some(rurl) = rurl else {
-            return Err(NpmError::new(format!(
-                "no repository: could not get url"
-            ))
+            return Err(NpmError::new("no repository: could not get url".to_string())
             .with_code("ENOREPO")
             .with_summary(spec.to_string()));
         };

@@ -44,9 +44,9 @@ pub fn audit_error(npm: &dyn Npm, report: &AuditReport, command: &str) -> Result
             "statusCode": error.status_code,
             "body": error.body,
         });
-        crate::output::standard(&format!("{}\n", serde_json::to_string(&payload).unwrap_or_default()));
+        crate::output::standard(format!("{}\n", serde_json::to_string(&payload).unwrap_or_default()));
     } else {
-        crate::output::standard(&format!("{}\n", error.body));
+        crate::output::standard(format!("{}\n", error.body));
     }
     Err(NpmError::new("audit endpoint returned an error"))
 }

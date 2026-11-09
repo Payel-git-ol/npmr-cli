@@ -45,13 +45,16 @@ pub fn auth_token_key(registry: &str) -> String {
     format!("//{host}{path}:_authToken")
 }
 
+/// Performs the token exchange for `(package, id_token)`.
+pub type Exchange<'f> = dyn Fn(&str, &str) -> Option<String> + 'f;
+
 /// Runs the OIDC flow. `exchange` performs the actual token exchange; when
 /// it is not wired up yet the attempt is logged and skipped.
 pub fn oidc(
     package_name: &str,
     registry: &str,
     env: impl Fn(&str) -> Option<String>,
-    exchange: Option<&dyn Fn(&str, &str) -> Option<String>>,
+    exchange: Option<&Exchange>,
 ) -> Option<(String, String)> {
     let vendor = detect_ci(&env)?;
     let mut id_token = env("NPM_ID_TOKEN");
@@ -74,9 +77,7 @@ pub fn oidc(
     }
 
     let id_token = id_token.take()?;
-    let Some(audience) = audience(registry) else {
-        return None;
-    };
+    let audience = audience(registry)?;
     let auth_token_key = auth_token_key(registry);
 
     let Some(exchange) = exchange else {

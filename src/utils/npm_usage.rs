@@ -54,7 +54,7 @@ pub fn usage(npm: &(dyn Npm + '_)) -> String {
         Configuration fields: npm help 7 config\n\
         \n\
         npm@{version} {root}",
-        userconfig = format!("{}{}", indent(INDENT), store.get_str("userconfig")),
+        userconfig = indent(INDENT) + &store.get_str("userconfig"),
         version = npm.version(),
         root = npm.npm_root().to_string_lossy(),
     )

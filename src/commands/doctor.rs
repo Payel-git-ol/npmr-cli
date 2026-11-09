@@ -261,6 +261,7 @@ impl Doctor {
         }
     }
 
+    #[expect(dead_code, reason = "cache verification is not wired into the checkup yet")]
     fn verify_cached_files(&self, npm: &dyn Npm) -> Result<String> {
         info(
             "doctor",

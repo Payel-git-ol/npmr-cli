@@ -307,6 +307,7 @@ pub fn dialogue(npm: &dyn Npm, message: &str) {
 
 /// Shared `create` flow: validate flags, show what will be created, ask for
 /// confirmation and POST the config. TODO: perform the request.
+#[expect(clippy::too_many_arguments, reason = "mirrors the upstream JS signature")]
 pub fn create_config(
     npm: &mut (dyn Npm + '_),
     meta: &CommandMeta,

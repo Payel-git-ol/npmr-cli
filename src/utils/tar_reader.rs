@@ -49,7 +49,14 @@ fn decompress(data: &[u8]) -> Result<Vec<u8>> {
 }
 
 /// Decompresses (if needed) and walks a tarball, returning its entries.
-pub fn entries(tarball: &[u8]) -> Result<Vec<(String, Vec<u8>, u64, u32)>> {
+pub struct Entry {
+    pub path: String,
+    pub data: Vec<u8>,
+    pub size: u64,
+    pub mode: u32,
+}
+
+pub fn entries(tarball: &[u8]) -> Result<Vec<Entry>> {
     let raw = if tarball.starts_with(&[0x1f, 0x8b]) {
         decompress(tarball)?
     } else {
@@ -74,7 +81,7 @@ pub fn entries(tarball: &[u8]) -> Result<Vec<(String, Vec<u8>, u64, u32)>> {
 
         // Skip links, directories and device nodes; keep regular files.
         if typeflag == b'0' || typeflag == 0 {
-            result.push((name, data, size as u64, mode));
+            result.push(Entry { path: name, data, size: size as u64, mode });
         }
     }
     Ok(result)
@@ -87,14 +94,14 @@ pub fn list_entries(tarball: &[u8]) -> Result<(Vec<TarFile>, usize, u64, Vec<Str
     let mut files = Vec::with_capacity(all.len());
     let mut total = 0;
 
-    for (path, data, size, mode) in all {
-        collect_bundled(&path, &mut bundled);
-        let stripped = path.strip_prefix("package/").unwrap_or(&path);
-        total += data.len() as u64;
+    for entry in all {
+        collect_bundled(&entry.path, &mut bundled);
+        let stripped = entry.path.strip_prefix("package/").unwrap_or(&entry.path);
+        total += entry.data.len() as u64;
         files.push(TarFile {
             path: stripped.to_string(),
-            size,
-            mode,
+            size: entry.size,
+            mode: entry.mode,
         });
     }
     let count = files.len();
@@ -105,8 +112,8 @@ pub fn list_entries(tarball: &[u8]) -> Result<(Vec<TarFile>, usize, u64, Vec<Str
 pub fn read_file(tarball: &[u8], path: &str) -> Result<Vec<u8>> {
     entries(tarball)?
         .into_iter()
-        .find(|(name, ..)| name == path)
-        .map(|(.., data, _, _)| data)
+        .find(|entry| entry.path == path)
+        .map(|entry| entry.data)
         .ok_or_else(|| NpmError::new(format!("{path} not found in tarball")))
 }
 

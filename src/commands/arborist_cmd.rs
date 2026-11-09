@@ -84,9 +84,11 @@ fn get_workspaces_input(
 /// stores it on `this.workspaces`.
 pub struct WorkspaceContext<'a> {
     npm: &'a mut (dyn Npm + 'a),
+    #[expect(dead_code, reason = "workspace-aware commands are not wired to arborist yet")]
     workspaces: BTreeMap<String, String>,
 }
 
+#[expect(dead_code, reason = "workspace-aware commands are not wired to arborist yet")]
 impl<'a> WorkspaceContext<'a> {
     pub fn new(npm: &'a mut (dyn Npm + 'a), workspaces: BTreeMap<String, String>) -> Self {
         Self { npm, workspaces }
@@ -165,6 +167,7 @@ impl Npm for WorkspaceContext<'_> {
 }
 
 /// Shared params for all arborist commands.
+#[expect(dead_code, reason = "commands declare their params explicitly for now")]
 pub const ARBORIST_PARAMS: &[&str] = &[
     "workspace",
     "workspaces",
@@ -174,6 +177,7 @@ pub const ARBORIST_PARAMS: &[&str] = &[
 
 /// Convenience: builds a `ParsedFlags` for a command with the arborist base
 /// metadata plus extra definitions.
+#[expect(dead_code, reason = "commands call `parse_flags` directly")]
 pub fn parse(meta: &CommandMeta, args: &[String]) -> ParsedFlags {
     crate::commands::parse_flags(meta, args)
 }

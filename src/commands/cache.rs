@@ -140,7 +140,7 @@ impl Cache {
             match all.iter().find(|(hash, _, _)| hash == key || hash.starts_with(key.as_str())) {
                 Some(found) => picked.push(found.clone()),
                 None => {
-                    return Err(META.usage_error(&format!("Invalid npx key {key}")));
+                    return Err(META.usage_error(format!("Invalid npx key {key}")));
                 }
             }
         }

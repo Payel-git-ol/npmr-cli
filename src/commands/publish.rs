@@ -150,9 +150,7 @@ fn publish_one(
     let registry = npm.store().get_str("registry");
     let has_creds = credentials_present(npm, &registry);
     if workspace.is_some() && package_private {
-        return Err(NpmError::new(format!(
-            "This package has been marked as private\n  Remove the 'private' field from the package.json to publish it."
-        ))
+        return Err(NpmError::new("This package has been marked as private\n  Remove the 'private' field from the package.json to publish it.".to_string())
         .with_code("EPRIVATE"));
     }
     if !has_creds {

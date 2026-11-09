@@ -6,6 +6,7 @@ use thiserror::Error;
 /// command that produced it.
 #[derive(Debug, Error)]
 #[error("{}", .body)]
+#[derive(Default)]
 pub struct NpmError {
     pub code: Option<String>,
     pub summary: Vec<String>,
@@ -63,18 +64,6 @@ impl NpmError {
     }
 }
 
-impl Default for NpmError {
-    fn default() -> Self {
-        Self {
-            code: None,
-            summary: Vec::new(),
-            detail: Vec::new(),
-            exit_code: None,
-            suppress_error: false,
-            body: String::new(),
-        }
-    }
-}
 
 impl From<std::io::Error> for NpmError {    fn from(err: std::io::Error) -> Self {
         let code = match err.kind() {

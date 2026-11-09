@@ -17,6 +17,12 @@ pub static META: CommandMeta =
 
 pub struct StageDownload;
 
+impl Default for StageDownload {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StageDownload {
     pub fn new() -> Self {
         Self

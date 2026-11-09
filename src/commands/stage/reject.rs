@@ -19,6 +19,12 @@ pub static META: CommandMeta = CommandMeta::new(
 
 pub struct StageReject;
 
+impl Default for StageReject {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StageReject {
     pub fn new() -> Self {
         Self

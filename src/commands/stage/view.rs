@@ -15,6 +15,12 @@ pub static META: CommandMeta = CommandMeta::new("view", "View details of a speci
 
 pub struct StageView;
 
+impl Default for StageView {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StageView {
     pub fn new() -> Self {
         Self

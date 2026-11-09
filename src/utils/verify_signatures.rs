@@ -257,8 +257,8 @@ impl<'a> VerifySignatures<'a> {
                 "found no dependencies to audit that were installed from a supported registry",
             ));
         }
-        result.invalid.sort_by(|a, b| a.key().cmp(&b.key()));
-        result.missing.sort_by(|a, b| a.key().cmp(&b.key()));
+        result.invalid.sort_by_key(|a| a.key());
+        result.missing.sort_by_key(|a| a.key());
         Ok(result)
     }
 
@@ -293,7 +293,7 @@ impl<'a> VerifySignatures<'a> {
                         .collect(),
                 );
             }
-            standard(&format!("{}\n", serde_json::to_string_pretty(&payload).unwrap_or_default()));
+            standard(format!("{}\n", serde_json::to_string_pretty(&payload).unwrap_or_default()));
             return has_problems;
         }
 
@@ -307,14 +307,14 @@ impl<'a> VerifySignatures<'a> {
             }
         };
         let audited_plural = if result.audited_with_keys > 1 { "s" } else { "" };
-        standard(&format!(
+        standard(format!(
             "audited {} package{audited_plural} in {elapsed_secs}s\n",
             result.audited_with_keys
         ));
 
         let verified = paint("verified", Color::White, color);
         if result.verified_signatures > 0 {
-            standard(&format!(
+            standard(format!(
                 "{}\n",
                 if result.verified_signatures == 1 {
                     format!("1 package has a {verified} registry signature")
@@ -327,7 +327,7 @@ impl<'a> VerifySignatures<'a> {
             ));
         }
         if result.verified_attestations > 0 {
-            standard(&format!(
+            standard(format!(
                 "{}\n",
                 if result.verified_attestations == 1 {
                     format!("1 package has a {verified} attestation")
@@ -345,7 +345,7 @@ impl<'a> VerifySignatures<'a> {
 
         if !result.missing.is_empty() {
             let missing = paint("missing", Color::Red, color);
-            standard(&plurals(
+            standard(plurals(
                 result.missing.len(),
                 &format!(
                     "1 package has a {missing} registry signature but the registry is providing signing keys:\n"
@@ -356,7 +356,7 @@ impl<'a> VerifySignatures<'a> {
                 ),
             ));
             for entry in &result.missing {
-                standard(&format!(
+                standard(format!(
                     "{} ({})\n",
                     paint(&entry.key(), Color::Red, color),
                     entry.registry
@@ -375,7 +375,7 @@ impl<'a> VerifySignatures<'a> {
                 .filter(|i| i.code.as_deref() == Some("EINTEGRITYSIGNATURE"))
                 .collect();
             if !signatures.is_empty() {
-                standard(&plurals(
+                standard(plurals(
                     signatures.len(),
                     &format!("1 package has an {invalid} registry signature:\n"),
                     &format!(
@@ -384,7 +384,7 @@ impl<'a> VerifySignatures<'a> {
                     ),
                 ));
                 for entry in &signatures {
-                    standard(&format!(
+                    standard(format!(
                         "{} ({})\n",
                         paint(&entry.key(), Color::Red, color),
                         entry.registry
@@ -398,7 +398,7 @@ impl<'a> VerifySignatures<'a> {
                 .filter(|i| i.code.as_deref() == Some("EATTESTATIONVERIFY"))
                 .collect();
             if !attestations.is_empty() {
-                standard(&plurals(
+                standard(plurals(
                     attestations.len(),
                     &format!("1 package has an {invalid} attestation:\n"),
                     &format!(
@@ -407,7 +407,7 @@ impl<'a> VerifySignatures<'a> {
                     ),
                 ));
                 for entry in &attestations {
-                    standard(&format!(
+                    standard(format!(
                         "{} ({})\n",
                         paint(&entry.key(), Color::Red, color),
                         entry.registry
@@ -415,7 +415,7 @@ impl<'a> VerifySignatures<'a> {
                 }
                 standard("\n");
             }
-            standard(&format!(
+            standard(format!(
                 "{}\n",
                 if result.invalid.len() == 1 {
                     "Someone might have tampered with this package since it was published on the registry!"

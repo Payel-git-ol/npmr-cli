@@ -48,6 +48,7 @@ fn unparse_person(d: &Value) -> String {
     out
 }
 
+#[expect(dead_code, reason = "used once field projection output is rendered")]
 fn cleanup(data: &Value) -> Value {
     match data {
         Value::Array(items) => Value::Array(items.iter().map(cleanup).collect()),
@@ -208,7 +209,7 @@ pub fn pretty_view(packu: &Map<String, Value>, manifest: &Map<String, Value>, co
         if !keywords.is_empty() {
             let list: Vec<String> = keywords
                 .iter()
-                .map(|k| paint(&k.as_str().unwrap_or_default().to_string(), Color::Cyan, color))
+                .map(|k| paint(k.as_str().unwrap_or_default(), Color::Cyan, color))
                 .collect();
             res.push(format!("\nkeywords: {}", list.join(", ")));
         }
@@ -271,7 +272,7 @@ pub fn pretty_view(packu: &Map<String, Value>, manifest: &Map<String, Value>, co
     let publish_time = packu
         .get("time")
         .and_then(Value::as_object)
-        .and_then(|time| time.get(&version as &str))
+        .and_then(|time| time.get(version as &str))
         .and_then(Value::as_str);
     if publisher.is_some() || packu.get("time").is_some() {
         let mut info = "published".to_string();

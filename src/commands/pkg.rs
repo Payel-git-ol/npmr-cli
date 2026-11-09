@@ -198,13 +198,8 @@ fn get_in_mut<'a>(value: &'a mut Value, segs: &[Seg]) -> Option<&'a mut Value> {
     }
 }
 
-fn format_jsonish(value: &Value, color: bool) -> String {
-    let body = serde_json::to_string_pretty(value).unwrap_or_default();
-    if color {
-        body
-    } else {
-        body
-    }
+fn format_jsonish(value: &Value, _color: bool) -> String {
+    serde_json::to_string_pretty(value).unwrap_or_default()
 }
 
 impl Pkg {

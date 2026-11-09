@@ -19,6 +19,7 @@ enum Sink {
 }
 
 struct LogFile {
+    #[expect(dead_code, reason = "kept for the rotating log file name")]
     path: PathBuf,
     file: File,
     events: usize,
