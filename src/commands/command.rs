@@ -228,7 +228,8 @@ impl CommandMeta {
     }
 
     /// The `EUSAGE` error carrying this command's help text.
-    pub fn usage_error(&self, prefix: &str) -> NpmError {
+    pub fn usage_error(&self, prefix: impl AsRef<str>) -> NpmError {
+        let prefix = prefix.as_ref();
         let body = if prefix.is_empty() {
             format!("\n{}", self.usage_text(None, true))
         } else {
