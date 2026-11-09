@@ -1,46 +1,88 @@
-# npm - a JavaScript package manager
+# npmr - npm rewritten in Rust
+
+An experimental fork of [npm](https://github.com/npm/cli) rewritten in Rust. The goal
+is to move away from the slow JavaScript implementation to a faster native binary.
+Every module under `lib/` was translated into a single Rust crate, and the JavaScript
+sources have been removed. Commands share npm's configuration layers, argument parsing,
+logging format and output, so the port behaves like the CLI it replaces wherever the
+port is implemented.
+
+The project is a work in progress: commands that depend on the npm registry, the
+install-tree ("arborist") or tarball fetching report `ENOTSUP` instead of silently
+doing nothing.
 
 ### Requirements
 
-You should be running a currently supported version of [Node.js](https://nodejs.org/en/download/) to run **`npm`**.  For a list of which versions of Node.js are currently supported, please see the [Node.js releases](https://nodejs.org/en/about/previous-releases) page.
+* Rust 1.85 or newer (edition 2024)
 
-### Installation
+No Node.js is required to build or run the binary.
 
-**`npm`** comes bundled with [**`node`**](https://nodejs.org/), & most third-party distributions, by default. Officially supported downloads/distributions can be found at: [nodejs.org/en/download](https://nodejs.org/en/download)
-
-#### Direct Download
-
-You can download & install **`npm`** directly from [**npmjs**.com](https://npmjs.com/) using our custom `install.sh` script:
+### Build
 
 ```bash
-curl -qL https://www.npmjs.com/install.sh | sh
+cargo build --release
+./target/release/npmr --version
 ```
 
-#### Node Version Managers
-
-If you're looking to manage multiple versions of **`Node.js`** &/or **`npm`**, consider using a [node version manager](https://github.com/search?q=node+version+manager+archived%3Afalse&type=repositories&ref=advsearch)
+Dependencies are pinned in `Cargo.lock`; for an air-gapped build use
+`cargo build --offline`.
 
 ### Usage
 
 ```bash
-npm <command>
+npmr <command> [--flag[=value]] [args...]
 ```
+
+`npmr --help` lists every command, and `npmr <command> -h` gives a per-command
+usage summary. Configuration is read from the same places as npm: built-in
+defaults, the global `.npmrc`, the user `.npmrc`, the project `.npmrc` and the
+command line, in that order of precedence.
+
+### Project layout
+
+| Path | Contents |
+| --- | --- |
+| `src/main.rs` | Binary entry point |
+| `src/cli/` | Startup: config loading, command dispatch, exit handler, update notifier, engine checks |
+| `src/npm.rs` | `Npm` trait shared by commands (config store, manifest, output, bins) |
+| `src/store.rs` | Layered configuration store replacing `@npmcli/config` |
+| `src/cache.rs` | In-memory (moka) cache for parsed `package.json` and `.npmrc` files, invalidated on mtime change |
+| `src/commands/` | One module per npm command |
+| `src/utils/` | Helpers ported from `lib/utils` (logging, errors, auth, workspaces, sbom, signatures, ...) |
+| `src/completion/` | Shell completion scripts for bash, zsh, fish and PowerShell |
+
+### Port status
+
+Configuration, argument parsing, logging, error reporting, help, completion,
+`config`, `pkg`, `init`, `run`/`exec` scripts, `allow-scripts` tooling, workspace
+helpers, SBOM export, signature verification and the other self-contained commands
+are ported.
+
+Anything that needs network access or the install tree is stubbed with an
+`ENOTSUP` error:
+
+* registry access - `access`, `deprecate`, `dist-tag`, `org`, `owner`, `search`,
+  `view`, `unpublish`, `token`, `trust`, `stage`;
+* install tree (arborist) - `install`, `ci`, `update`, `ls`, `audit`, `outdated`,
+  `dedupe`, `prune`, `explain`, `fund`, `diff`;
+* package fetching - `pack`, `publish`, `patch`, `cache add`, `doctor` checks.
 
 ### Links & Resources
 
 * [**Documentation**](https://docs.npmjs.com/) - Official docs & how-tos for all things **npm**
-    * Note: you can also search docs locally with `npm help-search <query>`
-* [**Bug Tracker**](https://github.com/npm/cli/issues) - Search or submit bugs against the CLI
-* [**Community Feedback and Discussions**](https://github.com/orgs/community/discussions/categories/npm) - Contribute ideas & discussion around the npm registry, website & CLI
-* [**RFCs**](https://github.com/npm/rfcs) - Contribute ideas & specifications for the API/design of the npm CLI
-* [**Service Status**](https://status.npmjs.org/) - Monitor the current status & see incident reports for the website & registry
-* [**Project Status**](https://npm.github.io/statusboard/) - See the health of all our maintained OSS projects in one view
-* [**Support**](https://www.npmjs.com/support) - Experiencing problems with the **npm** [website](https://npmjs.com) or [registry](https://registry.npmjs.org)? [File a ticket](https://www.npmjs.com/support)
+    * Note: `npmr help-search <query>` searches the local docs
+* [**Upstream CLI**](https://github.com/npm/cli) - The JavaScript implementation this port follows
+* [**RFCs**](https://github.com/npm/rfcs) - Design discussions for the npm CLI and registry
+* [**Service Status**](https://status.npmjs.org/) - Status of the npm website & registry
 
 ### Acknowledgments
 
-* `npm` is configured to use the **npm Public Registry** at [https://registry.npmjs.org](https://registry.npmjs.org) by default; Usage of this registry is subject to **Terms of Use** available at [https://npmjs.com/policies/terms](https://npmjs.com/policies/terms)
-* You can configure `npm` to use any other compatible registry you prefer. You can read more about [configuring third-party registries](https://docs.npmjs.com/cli/v7/using-npm/registry)
+* `npmr` is configured to use the **npm Public Registry** at
+  [https://registry.npmjs.org](https://registry.npmjs.org) by default; usage of this
+  registry is subject to the **Terms of Use** available at
+  [https://npmjs.com/policies/terms](https://npmjs.com/policies/terms)
+* You can configure `npmr` to use any other compatible registry; see
+  [configuring third-party registries](https://docs.npmjs.com/cli/v7/using-npm/registry)
 
 ### FAQ on Branding
 
