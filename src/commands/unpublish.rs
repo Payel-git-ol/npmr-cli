@@ -30,9 +30,7 @@ impl Unpublish {
     }
 
     fn read_manifest(local_prefix: &Path) -> Option<serde_json::Value> {
-        std::fs::read_to_string(local_prefix.join("package.json"))
-            .ok()
-            .and_then(|t| serde_json::from_str(&t).ok())
+        crate::cache::read_json(&local_prefix.join("package.json")).ok()
     }
 
     fn unpublish(&self, npm: &dyn Npm, args: &[String], local_prefix: &Path) -> Result<()> {

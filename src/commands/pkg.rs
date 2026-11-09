@@ -36,17 +36,16 @@ impl Default for Pkg {
 }
 
 fn load(path: &Path) -> Result<Map<String, Value>> {
-    let text = std::fs::read_to_string(path.join("package.json")).map_err(|err| {
-        NpmError::new(format!(
-            "Could not read package.json: {err}\n{}",
-            path.join("package.json").display()
-        ))
-        .with_code("ENOENT")
+    let manifest = path.join("package.json");
+    let value = crate::cache::read_json(&manifest).map_err(|err| {
+        let message = if std::fs::metadata(&manifest).is_err() {
+            format!("Could not read package.json: {err}\n{}", manifest.display())
+        } else {
+            format!("Failed to parse json\n{err}")
+        };
+        NpmError::new(message).with_code("EJSONPARSE")
     })?;
-    serde_json::from_str::<Value>(&text)
-        .map_err(|err| {
-            NpmError::new(format!("Failed to parse json\n{err}")).with_code("EJSONPARSE")
-        })?
+    value
         .as_object()
         .cloned()
         .ok_or_else(|| NpmError::new("package.json must contain an object").with_code("EJSONPARSE"))

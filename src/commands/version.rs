@@ -44,8 +44,7 @@ pub const VERSION_BUMPES: &[&str] = &[
 ];
 
 fn read_name_version(path: &Path) -> Option<(String, String)> {
-    let text = std::fs::read_to_string(path.join("package.json")).ok()?;
-    let pkg: Value = serde_json::from_str(&text).ok()?;
+    let pkg: Value = crate::cache::read_json(&path.join("package.json")).ok()?;
     let name = pkg.get("name").and_then(Value::as_str)?.to_string();
     let version = pkg.get("version").and_then(Value::as_str)?.to_string();
     Some((name, version))

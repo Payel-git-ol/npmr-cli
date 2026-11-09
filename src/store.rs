@@ -475,19 +475,10 @@ fn global_prefix_dir() -> PathBuf {
 /// Parses an ini-style `.npmrc` file into the store. Keys keep their
 /// source path so later diagnostics can point at the file.
 pub fn load_ini(store: &mut Store, path: &Path, source: ConfigSource) -> Result<()> {
-    let content = std::fs::read_to_string(path)?;
-    for line in content.lines() {
-        let line = line.trim();
-        if line.is_empty() || line.starts_with('#') || line.starts_with(';') {
-            continue;
-        }
-        if let Some((key, value)) = line.split_once(['=', ':']) {
-            let key = key.trim();
-            let value = value.trim().trim_matches('"');
-            store.set(Value::String(value.to_string()), key, source);
-            if let Some(entry) = store.entries.get_mut(&key.replace('_', "-")) {
-                entry.source_path = Some(path.to_path_buf());
-            }
+    for (key, value) in crate::cache::read_ini(path)? {
+        store.set(Value::String(value), &key, source);
+        if let Some(entry) = store.entries.get_mut(&key.replace('_', "-")) {
+            entry.source_path = Some(path.to_path_buf());
         }
     }
     Ok(())

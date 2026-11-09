@@ -4,7 +4,7 @@ use thiserror::Error;
 
 /// A command line usage error. Rendered together with the usage text of the
 /// command that produced it.
-#[derive(Debug, Error)]
+#[derive(Debug, Clone, Error)]
 #[error("{}", .body)]
 #[derive(Default)]
 pub struct NpmError {

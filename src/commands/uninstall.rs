@@ -39,14 +39,11 @@ impl Command for Uninstall {
                 return Err(NpmError::new("Must provide a package name to remove"));
             }
             let prefix = npm.local_prefix();
-            let text = std::fs::read_to_string(prefix.join("package.json")).map_err(|err| {
-                if err.kind() == std::io::ErrorKind::NotFound {
-                    META.usage_error("")
-                } else {
-                    NpmError::from(err)
-                }
-            })?;
-            let manifest: serde_json::Value = serde_json::from_str(&text)?;
+            let manifest_path = prefix.join("package.json");
+            if std::fs::metadata(&manifest_path).is_err() {
+                return Err(META.usage_error(""));
+            }
+            let manifest: serde_json::Value = crate::cache::read_json(&manifest_path)?;
             let name = manifest
                 .get("name")
                 .and_then(serde_json::Value::as_str)
