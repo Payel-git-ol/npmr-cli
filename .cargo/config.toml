@@ -1,0 +1,8 @@
+[build]
+target-dir = "target"
+
+[net]
+retry = 3
+
+[term]
+color = "auto"

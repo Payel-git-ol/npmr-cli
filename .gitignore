@@ -66,3 +66,7 @@ tap-testdir*/
 # rust
 /target/
 /Cargo.lock
+!/Cargo.toml
+!/Cargo.lock
+!/.cargo/
+!/src/
