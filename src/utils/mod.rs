@@ -18,6 +18,7 @@ pub mod format_bytes;
 pub mod format_search_stream;
 pub mod get_identity;
 pub mod get_workspaces;
+pub mod installed;
 pub mod installed_deep;
 pub mod installed_shallow;
 pub mod is_windows;

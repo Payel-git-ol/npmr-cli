@@ -111,6 +111,12 @@ impl Store {
         self.define("viewer", Value::String("man".into()));
         self.define("long", Value::Bool(false));
         self.define("audit", Value::Bool(true));
+        self.define("all", Value::Bool(false));
+        self.define("allow-scripts", Value::Null);
+        self.define("allow-scripts-pin", Value::Bool(true));
+        self.define("allow-scripts-pending", Value::Bool(false));
+        self.define("dangerously-allow-all-scripts", Value::Bool(false));
+        self.define("workspaces-update", Value::Bool(true));
         self.define("userconfig", Value::String(user_config_path()));
     }
 
