@@ -2,7 +2,7 @@
 
 use serde_json::Value;
 
-use crate::commands::command::{Command, CommandMeta, FlagDef, FlagType, ParsedFlags};
+use crate::commands::command::{Command, CommandMeta, ParsedFlags};
 use crate::commands::parse_flags;
 use crate::npm::Npm;
 use crate::store::ConfigSource;
@@ -25,7 +25,6 @@ pub static PUBLISH_PARAMS: &[&str] = &[
 pub static META: CommandMeta = CommandMeta::new("publish", "Publish a package")
     .with_usage(&["<package-spec>"])
     .with_params(PUBLISH_PARAMS)
-    .with_definitions(&[FlagDef::new("stage", FlagType::Boolean, "Stage instead of publishing")])
     .workspaces();
 
 pub struct Publish {

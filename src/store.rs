@@ -6,6 +6,9 @@ use serde_json::Value;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+/// Registry used when no other is configured.
+pub const DEFAULT_REGISTRY: &str = "https://registry.npmjs.org/";
+
 /// Where a config value was defined, from lowest to highest precedence.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ConfigSource {

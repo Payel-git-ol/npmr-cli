@@ -57,6 +57,11 @@ impl FlagDef {
         self
     }
 
+    pub const fn with_aliases(mut self, aliases: &'static [&'static str]) -> Self {
+        self.aliases = aliases;
+        self
+    }
+
     pub const fn required(mut self) -> Self {
         self.required = true;
         self
