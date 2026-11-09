@@ -69,6 +69,22 @@ pub trait Npm: Send + Sync {
         2
     }
 
+    fn json(&self) -> bool {
+        self.store().get_bool("json")
+    }
+
+    fn global_dir(&self) -> PathBuf {
+        self.store().global_dir()
+    }
+
+    fn local_dir(&self) -> PathBuf {
+        self.store().local_dir()
+    }
+
+    fn local_package(&self) -> Option<&Path> {
+        self.store().local_package.as_deref()
+    }
+
     fn local_prefix(&self) -> &Path {
         &self.store().local_prefix
     }
@@ -89,7 +105,10 @@ pub trait Npm: Send + Sync {
         self.store().prefix()
     }
 
-    fn usage(&self) -> String {
+    fn usage(&self) -> String
+    where
+        Self: Sized,
+    {
         crate::utils::npm_usage::usage(self)
     }
 
@@ -259,7 +278,7 @@ impl NpmCli {
         }
 
         if self.store.get_bool("force") {
-            crate::utils::log::warn("using --force", &["Recommended protections disabled."]);
+            crate::utils::log::warn("using --force", &[&"Recommended protections disabled."]);
         }
 
         self.loaded = true;

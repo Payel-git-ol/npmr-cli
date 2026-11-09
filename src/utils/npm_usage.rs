@@ -16,7 +16,7 @@ fn indent_newline(repeat: usize) -> String {
     format!("\n{}", indent(repeat))
 }
 
-pub fn usage(npm: &dyn Npm) -> String {
+pub fn usage(npm: &(dyn Npm + '_)) -> String {
     let store = npm.store();
     let browser = if store.get_str("viewer") == "browser" {
         " (in a browser)"
@@ -87,7 +87,7 @@ fn cmd_names() -> String {
     format!("{}{}", indent_newline(INDENT), &joined[2.min(joined.len())..])
 }
 
-fn cmd_usages(npm: &dyn Npm) -> String {
+fn cmd_usages(npm: &(dyn Npm + '_)) -> String {
     let mut max_len = 0usize;
     let mut set: Vec<(&'static str, Vec<String>)> = Vec::new();
     for c in COMMANDS {

@@ -6,7 +6,7 @@ pub mod store;
 pub mod utils;
 
 pub use npm::Npm;
-pub use npm::NpmError;
+pub use utils::errors::NpmError;
 
 pub const VERSION: &str = "12.2.1";
 pub const NPM_PATH: &str = "npmr";

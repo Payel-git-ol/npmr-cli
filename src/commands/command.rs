@@ -52,7 +52,7 @@ impl FlagDef {
         self
     }
 
-    pub const fn with_default(mut self, default: Value) -> Self {
+    pub fn with_default(mut self, default: Value) -> Self {
         self.default = Some(default);
         self
     }
@@ -256,14 +256,14 @@ pub trait Command: Send {
 
     /// Runs the command. `args` are the positional arguments after npm and the
     /// command name were removed.
-    fn exec(&mut self, npm: &mut dyn Npm, args: &[String]) -> Result<()> {
+    fn exec(&mut self, npm: &mut (dyn Npm + '_), args: &[String]) -> Result<()> {
         let _ = (npm, args);
         Ok(())
     }
 
     /// Runs the command once per workspace. The default delegates to [`exec`]
     /// for commands that do not support workspaces.
-    fn exec_workspaces(&mut self, npm: &mut dyn Npm, args: &[String]) -> Result<()> {
+    fn exec_workspaces(&mut self, npm: &mut (dyn Npm + '_), args: &[String]) -> Result<()> {
         self.exec(npm, args)
     }
 
@@ -271,7 +271,7 @@ pub trait Command: Send {
         parse_flags(self.meta(), args)
     }
 
-    fn validate_cli(&self, npm: &dyn Npm, _args: &[String]) -> Result<()> {
+    fn validate_cli(&self, npm: &(dyn Npm + '_), _args: &[String]) -> Result<()> {
         npm.store().log_warnings();
         Ok(())
     }

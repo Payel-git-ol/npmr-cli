@@ -49,7 +49,7 @@ fn run(npm: &mut NpmCli) -> i32 {
                 crate::utils::log::error(
                     "arg",
                     &[
-                        "Argument starts with non-ascii dash, this is probably invalid:",
+                        &"Argument starts with non-ascii dash, this is probably invalid:",
                         &crate::utils::redact::redact(&joined),
                     ],
                 );

@@ -3,7 +3,10 @@
 //! The registry maps canonical names onto [`CommandMeta`] so help output and
 //! flag parsing can work without instantiating a command.
 
+mod arborist_cmd;
 mod command;
+mod lifecycle_cmd;
+mod package_url_cmd;
 
 pub mod access;
 pub mod approve_scripts;
@@ -73,7 +76,10 @@ pub mod version;
 pub mod view;
 pub mod whoami;
 
+pub use arborist_cmd::ArboristCommand;
 pub use command::{Command, CommandMeta, FlagDef, FlagType, ParsedFlags, parse_flags};
+pub use lifecycle_cmd::LifecycleCommand;
+pub use package_url_cmd::PackageUrlCommand;
 
 use crate::store::ConfigSource;
 use crate::utils::errors::{NpmError, Result};

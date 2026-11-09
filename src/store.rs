@@ -134,7 +134,7 @@ impl Store {
         let mut remain = Vec::new();
         let mut cooked = Vec::new();
         let mut unknown_flags = Vec::new();
-        let mut iter = self.argv.iter().cloned().skip(1);
+        let mut iter = self.argv.clone().into_iter().skip(1);
         while let Some(arg) = iter.next() {
             cooked.push(arg.clone());
             if let Some(flag) = arg.strip_prefix("--") {
