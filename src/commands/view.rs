@@ -47,7 +47,6 @@ fn unparse_person(d: &Value) -> String {
     }
     out
 }
-
 #[expect(dead_code, reason = "used once field projection output is rendered")]
 fn cleanup(data: &Value) -> Value {
     match data {
