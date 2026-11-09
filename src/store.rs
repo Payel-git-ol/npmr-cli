@@ -362,6 +362,51 @@ impl Store {
         }
     }
 
+    /// Entries whose value was defined exactly at `source`.
+    pub fn entries_at(&self, source: ConfigSource) -> Vec<(&String, &ConfigEntry)> {
+        self.entries
+            .iter()
+            .filter(|(_, e)| e.source == source)
+            .collect()
+    }
+
+    /// Removes `key` when the entry was defined at `source`.
+    pub fn remove(&mut self, key: &str, source: ConfigSource) {
+        let key = key.trim_start_matches("no-").replace('_', "-");
+        if self.entries.get(&key).is_some_and(|e| e.source == source) {
+            self.entries.remove(&key);
+        }
+    }
+
+    /// Configuration problems `npm config fix` can repair.
+    pub fn repairable_problems(&self) -> Vec<RepairProblem> {
+        self.entries
+            .iter()
+            .filter(|(key, _)| key.contains('_'))
+            .map(|(key, entry)| RepairProblem {
+                action: "rename",
+                key: key.clone(),
+                from: Some(key.clone()),
+                to: Some(key.replace('_', "-")),
+                where_: entry.source,
+            })
+            .collect()
+    }
+
+    /// Applies the renames/deletions reported by [`Self::repairable_problems`].
+    pub fn repair(&mut self, problems: &[RepairProblem]) {
+        for problem in problems {
+            let Some(entry) = self.entries.remove(&problem.key) else {
+                continue;
+            };
+            if problem.action == "rename" {
+                if let Some(to) = &problem.to {
+                    self.entries.insert(to.clone(), entry);
+                }
+            }
+        }
+    }
+
     pub fn flat(&self) -> BTreeMap<String, Value> {
         self.entries
             .iter()
