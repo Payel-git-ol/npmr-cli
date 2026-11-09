@@ -117,8 +117,10 @@ pub trait Npm: Send + Sync {
 
     /// Resolves a command name, honouring aliases and abbreviations.
     fn cmd(&self, name: &str) -> Result<&'static str> {
-        deref(name)
-            .and_then(|c| crate::commands::canonical(&c))
+        let deref = deref(name);
+        deref
+            .as_deref()
+            .and_then(crate::commands::canonical)
             .ok_or_else(|| unknown_command(name))
     }
 
@@ -235,6 +237,10 @@ impl NpmCli {
         crate::utils::log::set_color(stderr_color);
         crate::utils::log::set_level(loglevel);
 
+        if self.store.get_bool("json") && !matches!(command_arg.as_deref(), Some("ls" | "ll")) {
+            crate::output::set_meta(true);
+        }
+
         if self.store.get_bool("version") {
             crate::utils::log::standard(self.version());
             self.loaded = true;
@@ -334,6 +340,7 @@ impl NpmCli {
             self.version(),
         );
         self.display.flush();
+        crate::output::flush();
     }
 
     pub fn exit_error_message(&self) -> String {

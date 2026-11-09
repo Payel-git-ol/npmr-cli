@@ -134,10 +134,11 @@ impl Store {
         );
     }
 
-    /// Loads config files and parses argv. In the Rust port this only records
-    /// argv; the `.npmrc` parser is provided by [`crate::store::load_ini`].
+    /// Parses argv, then reads the `.npmrc` layers so the command line still
+    /// takes precedence over every file.
     pub fn load(&mut self) -> Result<()> {
         self.load_cli()?;
+        load_config_files(self)?;
         self.loaded = true;
         Ok(())
     }
@@ -175,8 +176,17 @@ impl Store {
         Ok(())
     }
 
+    /// Looks a key up, matching `.npmrc` keys written with underscores
+    /// (`prefer_online`) against their canonical dash form.
     pub fn get(&self, key: &str) -> Option<&Value> {
-        self.entries.get(key).map(|e| &e.value)
+        self.entries
+            .get(key)
+            .or_else(|| {
+                key.contains('_')
+                    .then(|| self.entries.get(&key.replace('_', "-")))
+                    .flatten()
+            })
+            .map(|e| &e.value)
     }
 
     /// Reads a value defined at or below `max` precedence, matching the
@@ -199,7 +209,7 @@ impl Store {
     }
 
     pub fn set(&mut self, value: Value, key: &str, source: ConfigSource) {
-        let normalize = key.trim_start_matches("no-").replace('_', "-");
+        let normalize = normalize_key(key);
         let key = if key.starts_with("no-") && value.as_bool() == Some(true) {
             self.entries.insert(
                 normalize.clone(),
@@ -379,13 +389,14 @@ impl Store {
 
     /// Removes `key` when the entry was defined at `source`.
     pub fn remove(&mut self, key: &str, source: ConfigSource) {
-        let key = key.trim_start_matches("no-").replace('_', "-");
+        let key = normalize_key(key);
         if self.entries.get(&key).is_some_and(|e| e.source == source) {
             self.entries.remove(&key);
         }
     }
 
-    /// Configuration problems `npm config fix` can repair.
+    /// Configuration problems `npm config fix` can repair: keys written with
+    /// underscores, which npm only recognises in dash form.
     pub fn repairable_problems(&self) -> Vec<RepairProblem> {
         self.entries
             .iter()
@@ -401,15 +412,21 @@ impl Store {
     }
 
     /// Applies the renames/deletions reported by [`Self::repairable_problems`].
+    /// A rename keeps the value of the canonical entry when one is already
+    /// defined, since that is the one commands have been reading.
     pub fn repair(&mut self, problems: &[RepairProblem]) {
         for problem in problems {
             let Some(entry) = self.entries.remove(&problem.key) else {
                 continue;
             };
-            if problem.action == "rename" {
-                if let Some(to) = &problem.to {
-                    self.entries.insert(to.clone(), entry);
-                }
+            if problem.action != "rename" {
+                continue;
+            }
+            let Some(to) = &problem.to else {
+                continue;
+            };
+            if !self.entries.contains_key(to) {
+                self.entries.insert(to.clone(), entry);
             }
         }
     }
@@ -431,6 +448,12 @@ pub struct RepairProblem {
     pub from: Option<String>,
     pub to: Option<String>,
     pub where_: ConfigSource,
+}
+
+/// Canonical form of a config key: `no-foo=true` is `foo`, and `.npmrc`
+/// keys written with underscores map to their dash spelling.
+pub fn normalize_key(key: &str) -> String {
+    key.strip_prefix("no-").unwrap_or(key).replace('_', "-")
 }
 
 fn parse_value(raw: &str) -> Value {
@@ -472,13 +495,52 @@ fn global_prefix_dir() -> PathBuf {
     }
 }
 
+/// Path of the global config file, `<global prefix>/etc/npmrc`.
+fn global_config_path(store: &Store) -> PathBuf {
+    store.global_prefix.join("etc").join("npmrc")
+}
+
+/// Reads the user, global and project `.npmrc` files in increasing
+/// precedence. Missing or unreadable files are skipped, as `@npmcli/config`
+/// does outside of `--strict-npmrc` mode.
+pub fn load_config_files(store: &mut Store) -> Result<()> {
+    let global = global_config_path(store);
+    if let Some(user) = crate::utils::paths::home_dir().map(|home| home.join(".npmrc")) {
+        for (path, source) in [
+            (global.as_path(), ConfigSource::Global),
+            (user.as_path(), ConfigSource::User),
+        ] {
+            if path.is_file() {
+                load_ini(store, path, source)?;
+            }
+        }
+    }
+    let project = store.local_prefix.join(".npmrc");
+    if project.is_file() {
+        load_ini(store, &project, ConfigSource::Project)?;
+    }
+    Ok(())
+}
+
 /// Parses an ini-style `.npmrc` file into the store. Keys keep their
 /// source path so later diagnostics can point at the file.
 pub fn load_ini(store: &mut Store, path: &Path, source: ConfigSource) -> Result<()> {
     for (key, value) in crate::cache::read_ini(path)? {
+        let canonical = normalize_key(&key);
         store.set(Value::String(value), &key, source);
-        if let Some(entry) = store.entries.get_mut(&key.replace('_', "-")) {
+        if let Some(entry) = store.entries.get_mut(&canonical) {
             entry.source_path = Some(path.to_path_buf());
+        }
+        if key.contains('_') {
+            store
+                .entries
+                .entry(key)
+                .or_insert_with(|| ConfigEntry {
+                    value: Value::Null,
+                    source,
+                    source_path: None,
+                })
+                .source_path = Some(path.to_path_buf());
         }
     }
     Ok(())
@@ -503,5 +565,27 @@ mod tests {
         let mut store = Store::new(PathBuf::from("."), vec!["npm".into(), "--no-json".into()]);
         store.load().unwrap();
         assert!(!store.get_bool("json"));
+    }
+
+    #[test]
+    fn project_npmrc_loads_below_the_command_line() {
+        let dir = std::env::temp_dir().join(format!("npmr-store-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join(".npmrc"), "loglevel=warn\n\naudit=false\n").unwrap();
+
+        let mut store = Store::new(dir.clone(), vec!["npm".into(), "--loglevel=error".into()]);
+        store.load().unwrap();
+        assert_eq!(store.get_str("loglevel"), "error");
+        assert_eq!(store.get_str("audit"), "false");
+        assert_eq!(store.find("audit"), Some(ConfigSource::Project));
+        assert_eq!(
+            store
+                .get("audit")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
+            Some("false".to_string())
+        );
+
+        std::fs::remove_dir_all(dir).unwrap();
     }
 }

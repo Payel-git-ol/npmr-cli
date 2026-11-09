@@ -192,4 +192,57 @@ mod tests {
             vec!["Invalid: lock file's a@1.0.0 does not satisfy a@1.0.1"]
         );
     }
+
+    #[test]
+    fn reports_missing_packages_once_with_kind() {
+        let mut locked = BTreeMap::new();
+        let mut dev = node("node_modules/d", "d", "1.0.0");
+        dev.dev = true;
+        locked.insert(node("node_modules/d", "d", "1.0.0").location.clone(), dev);
+        let mut ideal = BTreeMap::new();
+        ideal.insert(
+            "node_modules/o".into(),
+            node("node_modules/o", "o", "2.0.0"),
+        );
+        let errors = validate_lockfile(&locked, &ideal);
+        assert_eq!(
+            errors,
+            vec![
+                "Missing: d@1.0.0 from lock file (dev)",
+                "Missing: o@2.0.0 from lock file",
+            ]
+        );
+    }
+
+    #[test]
+    fn package_extensions_must_match_the_lockfile() {
+        let none = serde_json::json!({ "packages": {} });
+        assert!(validate_package_extensions(&none, &serde_json::json!({})).is_empty());
+
+        let manifest = serde_json::json!({ "packageExtensions": { "a": {} } });
+        let errors = validate_package_extensions(&none, &manifest);
+        assert_eq!(
+            errors,
+            vec!["Invalid: packageExtensions in package.json is not reflected in the lock file"]
+        );
+
+        let lock = serde_json::json!({ "packageExtensionsChecksum": "abc" });
+        assert!(validate_package_extensions(&lock, &manifest).is_empty());
+    }
+
+    #[test]
+    fn npm_extension_hash_must_match_the_lockfile() {
+        let lock = serde_json::json!({ "npmExtensionChecksum": "abc" });
+        assert!(validate_npm_extension(&lock, Some("abc")).is_empty());
+        assert_eq!(
+            validate_npm_extension(&lock, Some("def")),
+            vec![
+                "Invalid: .npm-extension in the working directory differs from the lock file (lockfile: abc, actual: def)"
+            ]
+        );
+        assert_eq!(
+            validate_npm_extension(&lock, None),
+            vec!["Invalid: lock file references a .npm-extension that does not exist"]
+        );
+    }
 }

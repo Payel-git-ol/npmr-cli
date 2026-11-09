@@ -211,7 +211,7 @@ impl Pkg {
         workspace: Option<&str>,
     ) -> Result<()> {
         let manifest = load(path)?;
-        let json = npm.json();
+        let json = npm.json() || npm.store().get_bool("json");
         let root = Value::Object(manifest);
         if args.is_empty() {
             if json {
@@ -264,7 +264,7 @@ impl Pkg {
         if args.is_empty() {
             return Err(META.usage_error("npm pkg set expects a key=value pair of args."));
         }
-        let json = npm.json();
+        let json = npm.json() || npm.store().get_bool("json");
         let mut manifest = Value::Object(load(path)?);
         for arg in args {
             let Some((key, value)) = arg.split_once('=') else {

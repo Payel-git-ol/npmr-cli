@@ -205,4 +205,84 @@ mod tests {
         let patch = file_patch("new.txt", None, Some("x\n"));
         assert!(patch.contains("@@ -0,0 +1,1 @@"));
     }
+
+    struct TempDir(std::path::PathBuf);
+
+    impl TempDir {
+        fn new(name: &str) -> Self {
+            let dir =
+                std::env::temp_dir().join(format!("npmr-patch-{}-{name}", std::process::id()));
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).expect("create temp dir");
+            Self(dir)
+        }
+
+        fn write(&self, rel: &str, contents: &str) {
+            let path = self.0.join(rel);
+            std::fs::create_dir_all(path.parent().expect("parent")).expect("create dirs");
+            std::fs::write(path, contents).expect("write file");
+        }
+    }
+
+    impl Drop for TempDir {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    fn setup(name: &str, orig: &[(&str, &str)], edit: &[(&str, &str)]) -> (TempDir, String) {
+        let root = TempDir::new(name);
+        for (rel, contents) in orig {
+            root.write(&format!("orig/{rel}"), contents);
+        }
+        for (rel, contents) in edit {
+            root.write(&format!("edit/{rel}"), contents);
+        }
+        let diff = diff_dirs(&root.0.join("orig"), &root.0.join("edit"), &BTreeSet::new());
+        (root, diff.diff)
+    }
+
+    #[test]
+    fn modified_file_produces_a_unified_diff() {
+        let (_root, diff) = setup(
+            "modified",
+            &[("index.js", "hello\n")],
+            &[("index.js", "world\n")],
+        );
+        assert!(diff.contains("--- a/index.js"), "{diff}");
+        assert!(diff.contains("+++ b/index.js"), "{diff}");
+        assert!(diff.contains("-hello"), "{diff}");
+        assert!(diff.contains("+world"), "{diff}");
+    }
+
+    #[test]
+    fn added_file_uses_dev_null_and_skips_identical_files() {
+        let (_root, diff) = setup(
+            "added",
+            &[("keep.js", "same\n")],
+            &[("keep.js", "same\n"), ("added.js", "brand new\n")],
+        );
+        assert!(diff.contains("--- /dev/null"), "{diff}");
+        assert!(diff.contains("+++ b/added.js"), "{diff}");
+        assert!(diff.contains("+brand new"), "{diff}");
+        assert!(!diff.contains("keep.js"), "{diff}");
+    }
+
+    #[test]
+    fn deleted_file_uses_dev_null() {
+        let (_root, diff) = setup("deleted", &[("gone.js", "remove me\n")], &[]);
+        assert!(diff.contains("--- a/gone.js"), "{diff}");
+        assert!(diff.contains("+++ /dev/null"), "{diff}");
+        assert!(diff.contains("-remove me"), "{diff}");
+    }
+
+    #[test]
+    fn package_json_is_flagged_instead_of_diffed() {
+        let root = TempDir::new("pkgjson");
+        root.write("orig/package.json", "{}\n");
+        root.write("edit/package.json", "{\"name\":\"x\"}\n");
+        let result = diff_dirs(&root.0.join("orig"), &root.0.join("edit"), &BTreeSet::new());
+        assert!(result.package_json_changed);
+        assert!(result.diff.is_empty(), "{}", result.diff);
+    }
 }

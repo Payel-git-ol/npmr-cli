@@ -22,7 +22,8 @@ pub fn distance(a: &str, b: &str) -> usize {
 }
 
 fn is_close(scmd: &str, cmd: &str) -> bool {
-    (distance(scmd, cmd) as f64) < scmd.len() as f64 * 0.4
+    let len = scmd.chars().count().max(cmd.chars().count()) as f64;
+    (distance(scmd, cmd) as f64) < len * 0.4
 }
 
 /// Suggests close commands, package scripts and bins for an unknown command.
@@ -87,6 +88,26 @@ mod tests {
     #[test]
     fn distance_basic() {
         assert_eq!(distance("kitten", "sitting"), 3);
+    }
+
+    #[test]
+    fn suggests_scripts_and_bins() {
+        let pkg = serde_json::json!({
+            "bin": { "npx": "exists" },
+            "scripts": { "install": "exists", "posttest": "exists" }
+        });
+        let sttest = did_you_mean(Some(&pkg), "sttest");
+        assert!(sttest.contains("npm run posttest"), "{sttest}");
+        let npxx = did_you_mean(Some(&pkg), "npxx");
+        assert!(npxx.contains("npm exec npx"), "{npxx}");
+        assert_eq!(did_you_mean(Some(&pkg), "qwuijbo"), "");
+    }
+
+    #[test]
+    fn missing_scripts_and_bins_still_suggests_commands() {
+        let pkg = serde_json::json!({ "name": "missing-bin" });
+        assert!(did_you_mean(Some(&pkg), "nistall").contains("npm install"));
+        assert!(did_you_mean(None, "nistall").contains("npm install"));
     }
 
     #[test]

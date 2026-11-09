@@ -446,9 +446,11 @@ impl Config {
                 }
             }
         }
-        npm.store_mut().repair(&problems);
+        locations.sort_unstable();
+        locations.dedup();
         crate::output::standard("The following configuration problems have been repaired:\n");
         crate::output::standard(lines.join("\n"));
+        npm.store_mut().repair(&problems);
         for location in locations {
             save(npm.store(), location)?;
         }
