@@ -8,24 +8,24 @@ use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 use crate::utils::reify_output::{ReifySummary, reify_output};
 
-#[derive(Debug, Clone, Default)]
-pub struct ReifyOptions {
+#[derive(Debug, Default)]
+pub struct ReifyOptions<'a> {
     pub path: PathBuf,
     pub audit: bool,
     pub fund: bool,
     pub save: Option<bool>,
     /// Packages to refresh; empty when updating the whole tree.
-    pub update: Vec<String>,
-    pub add: Vec<String>,
-    pub remove: Vec<String>,
+    pub update: &'a [String],
+    pub add: &'a [String],
+    pub remove: &'a [String],
     pub dry_run: bool,
-    pub workspaces: Vec<String>,
+    pub workspaces: &'a [String],
     /// `allowScripts` policy resolved from CLI/`.npmrc`/`package.json`.
     pub allow_scripts: Option<serde_json::Map<String, serde_json::Value>>,
 }
 
 /// Reifies the tree at `options.path`. TODO: implement `@npmcli/arborist`.
-pub fn reify(npm: &mut (dyn Npm + '_), options: ReifyOptions) -> Result<()> {
+pub fn reify(npm: &mut (dyn Npm + '_), options: ReifyOptions<'_>) -> Result<()> {
     let started = Instant::now();
     reify_tree(options.path.as_path())?;
     let summary = ReifySummary::default();
@@ -57,8 +57,8 @@ pub struct ArboristRun<'a> {
     pub package_lock: Option<bool>,
 }
 
-impl ArboristRun<'_> {
-    fn into_options(self, npm: &dyn Npm) -> ReifyOptions {
+impl<'a> ArboristRun<'a> {
+    fn into_options(self, npm: &dyn Npm) -> ReifyOptions<'a> {
         let allow_scripts = crate::utils::resolve_allow_scripts::resolve_allow_scripts(npm, false)
             .ok()
             .and_then(|resolved| resolved.policy);
@@ -67,11 +67,11 @@ impl ArboristRun<'_> {
             audit: npm.store().get_bool("audit"),
             fund: npm.store().get_bool("fund"),
             save: self.save,
-            update: self.update.to_vec(),
-            add: self.add.to_vec(),
-            remove: self.remove.to_vec(),
+            update: self.update,
+            add: self.add,
+            remove: self.remove,
             dry_run: self.dry_run,
-            workspaces: self.workspaces.to_vec(),
+            workspaces: self.workspaces,
             allow_scripts,
         }
     }

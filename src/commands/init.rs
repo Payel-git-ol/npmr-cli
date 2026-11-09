@@ -230,10 +230,10 @@ impl Init {
             .and_then(Value::as_str)
             .map(str::to_string)
             .unwrap_or_else(|| guess_name(npm.prefix().as_path()));
-        let default_version = npm.store().get_str("init-version");
-        let default_license = npm.store().get_str("init-license");
-        let default_type = npm.store().get_str("init-type");
-        let default_author = npm.store().get_str("init-author-name");
+        let default_version = npm.store().get_str("init-version").into_owned();
+        let default_license = npm.store().get_str("init-license").into_owned();
+        let default_type = npm.store().get_str("init-type").into_owned();
+        let default_author = npm.store().get_str("init-author-name").into_owned();
         let default_main = "index.js".to_string();
 
         let (name, version, description, main, kind, author, license, private) = if yes {

@@ -58,7 +58,7 @@ impl Command for Explore {
                 "\nExploring {}\nType 'exit' or ^D when finished\n",
                 path.display()
             ));
-            npm.store().get_str("shell")
+            npm.store().get_str("shell").into_owned()
         } else {
             rest.join(" ")
         };

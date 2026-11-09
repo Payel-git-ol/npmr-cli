@@ -271,7 +271,7 @@ pub fn run_shell(npm: &dyn Npm, path: &Path, command: &str) -> Result<()> {
             cmd
         }
     } else {
-        let mut cmd = std::process::Command::new(shell);
+        let mut cmd = std::process::Command::new(shell.as_ref());
         if cfg!(windows) {
             cmd.arg("/d").arg("/s").arg("/c").arg(command);
         } else {

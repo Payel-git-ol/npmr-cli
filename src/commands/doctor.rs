@@ -275,7 +275,7 @@ impl Doctor {
             &[&"verifyCachedFiles", &"Verifying the npm cache"],
         );
         let mut verified = 0usize;
-        let mut pending = vec![npm.store().cache()];
+        let mut pending = vec![npm.store().cache().to_path_buf()];
         while let Some(dir) = pending.pop() {
             let Ok(entries) = std::fs::read_dir(&dir) else {
                 continue;
@@ -359,7 +359,7 @@ impl Doctor {
             CheckKind::Permissions(index) => {
                 let check = &PERMISSION_CHECKS[index];
                 let root = match check.root {
-                    CheckRoot::Cache => npm.store().cache(),
+                    CheckRoot::Cache => npm.store().cache().to_path_buf(),
                     CheckRoot::LocalDir => npm.local_dir(),
                     CheckRoot::GlobalDir => npm.global_dir(),
                     CheckRoot::LocalBin => npm.local_dir().join(".bin"),

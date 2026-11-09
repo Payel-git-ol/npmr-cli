@@ -2,7 +2,7 @@
 //! against the workspace map declared in the root `package.json`.
 
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use crate::utils::errors::{NpmError, Result};
 
@@ -18,38 +18,63 @@ pub struct GetWorkspacesInput {
 pub fn get_workspaces(input: &GetWorkspacesInput) -> Result<BTreeMap<String, String>> {
     let root = PathBuf::from(&input.path);
     let pkg = read_package_json(&root)?;
-    let pkg_name = pkg
-        .get("name")
-        .and_then(|v| v.as_str())
-        .unwrap_or_default()
-        .to_string();
     let workspaces = map_workspaces(&root, &pkg)?;
 
     let mut res: BTreeMap<String, String> = BTreeMap::new();
     if input.include_workspace_root {
+        let pkg_name = pkg
+            .get("name")
+            .and_then(|v| v.as_str())
+            .unwrap_or_default()
+            .to_string();
         res.insert(pkg_name, input.path.clone());
     }
     if input.filters.is_empty() {
-        res.extend(workspaces.clone());
+        res.extend(workspaces);
+        if res.is_empty() {
+            return Err(NpmError::new("No workspaces found!"));
+        }
+        return Ok(res);
     }
 
     let relative_from = Path::new(&input.relative_from);
-    for filter in &input.filters {
-        for (name, workspace_path) in &workspaces {
-            let mut relative_path = diff_paths(Path::new(workspace_path), relative_from)
-                .map(|p| p.to_string_lossy().replace('\\', "/"))
+    // Computed once per workspace instead of once per filter.
+    let workspaces: Vec<(String, String, String)> = workspaces
+        .into_iter()
+        .map(|(name, workspace_path)| {
+            let relative_path = diff_paths(Path::new(&workspace_path), relative_from)
+                .map(|p| slash_path(&p))
                 .unwrap_or_default();
-            if filter.starts_with("./") {
-                relative_path = format!("./{relative_path}");
-            }
-            let relative_filter = diff_paths(Path::new(filter), &root)
-                .map(|p| p.to_string_lossy().replace('\\', "/"))
-                .unwrap_or_default();
+            (name, workspace_path, relative_path)
+        })
+        .collect();
 
+    for filter in &input.filters {
+        let relative_filter = diff_paths(Path::new(filter), &root)
+            .map(|p| slash_path(&p))
+            .unwrap_or_default();
+        let mut prefixed = String::with_capacity(relative_filter.len() + 2);
+        if filter.starts_with("./") {
+            prefixed.push_str("./");
+        }
+        prefixed.push_str(&globify(&relative_filter));
+        prefixed.push_str("/*");
+        let under_filter = glob::Pattern::new(&prefixed).ok();
+        let mut bare = String::with_capacity(filter.len() + 2);
+        bare.push_str(&globify(filter));
+        bare.push_str("/*");
+        let under_bare = glob::Pattern::new(&bare).ok();
+        let resolved_filter = resolve_join(relative_from, filter);
+
+        for (name, workspace_path, relative_path) in &workspaces {
             if filter == name
-                || resolve_join(relative_from, filter) == Path::new(workspace_path)
-                || glob_matches(&relative_path, &format!("{}/*", globify(&relative_filter)))
-                || glob_matches(&relative_path, &format!("{}/*", globify(filter)))
+                || resolved_filter.as_path() == Path::new(workspace_path)
+                || under_filter
+                    .as_ref()
+                    .is_some_and(|p| p.matches_with(relative_path, glob::MatchOptions::new()))
+                || under_bare
+                    .as_ref()
+                    .is_some_and(|p| p.matches_with(relative_path, glob::MatchOptions::new()))
             {
                 res.insert(name.clone(), workspace_path.clone());
             }
@@ -57,20 +82,19 @@ pub fn get_workspaces(input: &GetWorkspacesInput) -> Result<BTreeMap<String, Str
     }
 
     if res.is_empty() {
-        let msg = if input.filters.is_empty() {
-            "!".to_string()
-        } else {
-            let joined: String = input
-                .filters
-                .iter()
-                .map(|f| format!(" --workspace={f}"))
-                .collect();
-            format!(":\n {joined}")
-        };
-        return Err(NpmError::new(format!("No workspaces found{msg}")));
+        let joined: String = input
+            .filters
+            .iter()
+            .map(|f| format!(" --workspace={f}"))
+            .collect();
+        return Err(NpmError::new(format!("No workspaces found:\n {joined}")));
     }
 
     Ok(res)
+}
+
+fn slash_path(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
 }
 
 fn read_package_json(dir: &Path) -> Result<serde_json::Value> {
@@ -83,52 +107,51 @@ fn read_package_json(dir: &Path) -> Result<serde_json::Value> {
 /// Reads `workspaces` (array or `{packages}`) and expands the glob patterns to
 /// package directories containing a `package.json`.
 fn map_workspaces(root: &Path, pkg: &serde_json::Value) -> Result<BTreeMap<String, String>> {
-    let mut patterns: Vec<String> = Vec::new();
-    match pkg.get("workspaces") {
-        Some(serde_json::Value::Array(items)) => {
-            patterns.extend(items.iter().filter_map(|v| v.as_str()).map(String::from));
-        }
-        Some(serde_json::Value::Object(map)) => {
-            if let Some(serde_json::Value::Array(items)) = map.get("packages") {
-                patterns.extend(items.iter().filter_map(|v| v.as_str()).map(String::from));
-            }
-        }
-        _ => {}
-    }
+    let patterns = workspace_patterns(pkg);
 
     let mut res = BTreeMap::new();
+    if patterns.is_empty() {
+        return Ok(res);
+    }
+    let mut root_slash = slash_path(root);
+    root_slash.push('/');
+
     for pattern in patterns {
-        let full = format!(
-            "{}/{}",
-            root.to_string_lossy().replace('\\', "/"),
-            globify(&pattern)
-        );
-        if let Ok(paths) = glob::glob(&full) {
-            let mut matches: Vec<PathBuf> = paths.filter_map(|p| p.ok()).collect();
-            matches.sort();
-            for dir in matches {
-                if !dir.join("package.json").is_file() {
-                    continue;
-                }
-                if let Ok(manifest) = read_package_json(&dir) {
-                    if let Some(name) = manifest.get("name").and_then(|v| v.as_str()) {
-                        res.insert(name.to_string(), dir.to_string_lossy().into_owned());
-                    }
-                }
+        let mut full = String::with_capacity(root_slash.len() + pattern.len());
+        full.push_str(&root_slash);
+        full.push_str(&globify(pattern));
+        let Ok(paths) = glob::glob(&full) else {
+            continue;
+        };
+        let mut matches: Vec<PathBuf> = paths.filter_map(|p| p.ok()).collect();
+        matches.sort();
+        for dir in matches {
+            let Ok(manifest) = read_package_json(&dir) else {
+                // No `package.json` here: not a workspace package.
+                continue;
+            };
+            if let Some(name) = manifest.get("name").and_then(|v| v.as_str()) {
+                res.insert(name.to_string(), slash_path(&dir));
             }
         }
     }
     Ok(res)
 }
 
-fn globify(pattern: &str) -> String {
-    pattern.replace('\\', "/")
+fn workspace_patterns(pkg: &serde_json::Value) -> Vec<&str> {
+    let items = match pkg.get("workspaces") {
+        Some(serde_json::Value::Array(items)) => items,
+        Some(serde_json::Value::Object(map)) => match map.get("packages") {
+            Some(serde_json::Value::Array(items)) => items,
+            _ => return Vec::new(),
+        },
+        _ => return Vec::new(),
+    };
+    items.iter().filter_map(|v| v.as_str()).collect()
 }
 
-fn glob_matches(path: &str, pattern: &str) -> bool {
-    glob::Pattern::new(pattern)
-        .map(|p| p.matches_with(path, glob::MatchOptions::new()))
-        .unwrap_or(false)
+fn globify(pattern: &str) -> String {
+    pattern.replace('\\', "/")
 }
 
 fn resolve_join(base: &Path, other: &str) -> PathBuf {
@@ -152,8 +175,22 @@ fn normalize(path: &Path) -> PathBuf {
 
 /// `path.relative(from, to)` equivalent.
 fn diff_paths(to: &Path, from: &Path) -> Option<PathBuf> {
-    let to = normalize(to);
-    let from = normalize(from);
+    let to = if to
+        .components()
+        .any(|c| matches!(c, Component::CurDir | Component::ParentDir))
+    {
+        normalize(to)
+    } else {
+        to.to_path_buf()
+    };
+    let from = if from
+        .components()
+        .any(|c| matches!(c, Component::CurDir | Component::ParentDir))
+    {
+        normalize(from)
+    } else {
+        from.to_path_buf()
+    };
     let mut to_it = to.components().peekable();
     let mut from_it = from.components().peekable();
 

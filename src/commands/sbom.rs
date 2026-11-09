@@ -63,7 +63,7 @@ impl Command for Sbom {
 
     fn exec(&mut self, npm: &mut (dyn Npm + '_), args: &[String]) -> Result<()> {
         let format = npm.store().get_str("sbom-format");
-        if !SBOM_FORMATS.contains(&format.as_str()) {
+        if !SBOM_FORMATS.contains(&format.as_ref()) {
             return Err(META.usage_error(format!(
                 "Must specify --sbom-format flag with one of: {}.",
                 SBOM_FORMATS.join(", ")

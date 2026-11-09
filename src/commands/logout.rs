@@ -30,7 +30,7 @@ impl Command for Logout {
     }
 
     fn exec(&mut self, npm: &mut (dyn Npm + '_), _args: &[String]) -> Result<()> {
-        let registry = npm.store().get_str("registry");
+        let registry = npm.store().get_str("registry").into_owned();
         let host = registry_host(&registry);
         let token_key = format!("//{host}/:_authToken");
         let has_token = npm

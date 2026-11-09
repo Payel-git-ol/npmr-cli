@@ -43,7 +43,7 @@ pub fn update_notifier(npm: &dyn crate::npm::Npm) -> Option<String> {
         DAILY
     };
 
-    let marker = last_checked_file(&npm.store().cache());
+    let marker = last_checked_file(npm.store().cache());
     let threshold = SystemTime::now()
         .checked_sub(duration)
         .unwrap_or(SystemTime::UNIX_EPOCH);

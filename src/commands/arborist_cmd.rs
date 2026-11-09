@@ -20,7 +20,7 @@ pub trait ArboristCommand: Command {
     /// Resolves workspaces then delegates to [`exec_arborist`].
     fn exec_with_workspaces(&mut self, npm: &mut (dyn Npm + '_), args: &[String]) -> Result<()> {
         self.apply_defaults(npm);
-        if npm.store().get_bool("workspaces") || !npm.store().get_list("workspace").is_empty() {
+        if npm.store().get_bool("workspaces") || !npm.store().get_list_is_empty("workspace") {
             let workspaces = self.resolve_workspaces(npm)?;
             let mut npm_ctx = WorkspaceContext::new(npm, workspaces);
             return self.exec_arborist(&mut npm_ctx, args);
@@ -32,7 +32,7 @@ pub trait ArboristCommand: Command {
     /// outside a project context, warn when global and audit are both set.
     fn apply_defaults(&self, npm: &mut (dyn Npm + '_)) {
         let store = npm.store_mut();
-        let location_project = store.get_str("location") == "project"
+        let location_project = store.get_str("location").as_ref() == "project"
             || (store.is_default("location")
                 && !store.get_bool("global")
                 && store.local_package.is_some());

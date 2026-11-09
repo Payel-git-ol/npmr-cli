@@ -65,7 +65,7 @@ pub trait Npm: Send + Sync {
     }
 
     fn silent(&self) -> bool {
-        self.store().get_str("loglevel") == "silent"
+        self.store().get_str("loglevel").as_ref() == "silent"
     }
 
     fn lockfile_version(&self) -> u8 {
@@ -213,12 +213,12 @@ impl NpmCli {
         })?;
 
         let color = self.store.get_str("color");
-        let stdout_color = match color.as_str() {
+        let stdout_color = match color.as_ref() {
             "always" => true,
             "never" => false,
             _ => self.display.color_supported(true),
         };
-        let stderr_color = match color.as_str() {
+        let stderr_color = match color.as_ref() {
             "always" => true,
             "never" => false,
             _ => self.display.color_supported(false),
@@ -232,7 +232,7 @@ impl NpmCli {
             unicode: self.store.get_bool("unicode"),
             progress: self.store.get_bool("progress"),
             json: self.store.get_bool("json"),
-            heading: self.store.get_str("heading"),
+            heading: self.store.get_str("heading").into_owned(),
         });
         crate::utils::log::set_color(stderr_color);
         crate::utils::log::set_level(loglevel);

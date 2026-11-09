@@ -3,6 +3,7 @@
 
 use crate::utils::errors::{NpmError, Result};
 use serde_json::Value;
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -40,6 +41,16 @@ pub struct ConfigEntry {
     pub source_path: Option<PathBuf>,
 }
 
+impl ConfigEntry {
+    fn default_entry(value: Value) -> Self {
+        Self {
+            value,
+            source: ConfigSource::Default,
+            source_path: None,
+        }
+    }
+}
+
 /// A config key reported by `Config::get_unknown_configs`.
 #[derive(Debug, Clone)]
 pub struct UnknownConfig {
@@ -69,6 +80,8 @@ pub struct Store {
     pub global_prefix: PathBuf,
     pub local_package: Option<PathBuf>,
     unknown_positionals: Vec<String>,
+    /// `cache` resolved once, so cache consumers never reallocate a `PathBuf`.
+    cache_path: PathBuf,
 }
 
 impl Store {
@@ -84,11 +97,12 @@ impl Store {
     }
 
     fn apply_defaults(&mut self) {
+        self.define("registry", Value::String(DEFAULT_REGISTRY.to_owned()));
+        self.cache_path = PathBuf::from(default_cache_dir());
         self.define(
-            "registry",
-            Value::String("https://registry.npmjs.org/".into()),
+            "cache",
+            Value::String(self.cache_path.to_string_lossy().into_owned()),
         );
-        self.define("cache", Value::String(default_cache_dir()));
         self.define("logspeed", Value::from(0));
         self.define("loglevel", Value::String("notice".into()));
         self.define("logs-max", Value::from(10));
@@ -124,14 +138,8 @@ impl Store {
     }
 
     fn define(&mut self, key: &str, value: Value) {
-        self.entries.insert(
-            key.to_string(),
-            ConfigEntry {
-                value,
-                source: ConfigSource::Default,
-                source_path: None,
-            },
-        );
+        self.entries
+            .insert(key.to_string(), ConfigEntry::default_entry(value));
     }
 
     /// Parses argv, then reads the `.npmrc` layers so the command line still
@@ -145,9 +153,10 @@ impl Store {
 
     fn load_cli(&mut self) -> Result<()> {
         let mut remain = Vec::new();
-        let mut cooked = Vec::new();
+        let mut cooked = Vec::with_capacity(self.argv.len());
         let mut unknown_flags = Vec::new();
-        let mut iter = self.argv.clone().into_iter().skip(1);
+        let argv = std::mem::take(&mut self.argv);
+        let mut iter = argv.iter().skip(1);
         while let Some(arg) = iter.next() {
             cooked.push(arg.clone());
             if let Some(flag) = arg.strip_prefix("--") {
@@ -160,14 +169,15 @@ impl Store {
                     self.set(Value::Bool(true), flag, ConfigSource::Cli);
                 } else if let Some(next) = iter.next() {
                     cooked.push(next.clone());
-                    self.set(parse_value(&next), flag, ConfigSource::Cli);
+                    self.set(parse_value(next), flag, ConfigSource::Cli);
                 } else {
                     unknown_flags.push(flag.to_string());
                 }
             } else {
-                remain.push(arg);
+                remain.push(arg.clone());
             }
         }
+        self.argv = argv;
         self.parsed_argv = ParsedArgv {
             remain,
             cooked,
@@ -179,14 +189,22 @@ impl Store {
     /// Looks a key up, matching `.npmrc` keys written with underscores
     /// (`prefer_online`) against their canonical dash form.
     pub fn get(&self, key: &str) -> Option<&Value> {
+        if let Some(entry) = self.entries.get(key) {
+            return Some(&entry.value);
+        }
+        if !key.contains('_') {
+            return None;
+        }
+        if key.as_bytes().contains(&b'-') {
+            // Mixed spelling (`prefer_online_now`): the dashed form only has
+            // to be allocated when the key could actually match it.
+            return self.entries.get(&key.replace('_', "-")).map(|e| &e.value);
+        }
         self.entries
-            .get(key)
-            .or_else(|| {
-                key.contains('_')
-                    .then(|| self.entries.get(&key.replace('_', "-")))
-                    .flatten()
-            })
-            .map(|e| &e.value)
+            .range(key.to_owned()..)
+            .next()
+            .filter(|(candidate, _)| dash_matches(candidate, key))
+            .map(|(_, entry)| &entry.value)
     }
 
     /// Reads a value defined at or below `max` precedence, matching the
@@ -209,27 +227,33 @@ impl Store {
     }
 
     pub fn set(&mut self, value: Value, key: &str, source: ConfigSource) {
-        let normalize = normalize_key(key);
-        let key = if key.starts_with("no-") && value.as_bool() == Some(true) {
-            self.entries.insert(
-                normalize.clone(),
-                ConfigEntry {
-                    value: Value::Bool(false),
-                    source,
-                    source_path: None,
-                },
-            );
+        if key.starts_with("no-") && value.as_bool() == Some(true) {
+            let key = normalize_key(key).into_owned();
+            self.store_entry(&key, Value::Bool(false), source);
             return;
-        } else {
-            normalize
-        };
-        if let Some(entry) = self.entries.get_mut(&key) {
+        }
+        self.store_entry(key, value, source);
+    }
+
+    fn store_entry(&mut self, key: &str, value: Value, source: ConfigSource) {
+        if let Some(entry) = self.entries.get_mut(key) {
             if entry.source > source {
                 return;
+            }
+            if key == "cache"
+                && let Value::String(path) = &value
+            {
+                self.cache_path = PathBuf::from(path);
             }
             entry.value = value;
             entry.source = source;
         } else {
+            let key = normalize_key(key).into_owned();
+            if key == "cache"
+                && let Value::String(path) = &value
+            {
+                self.cache_path = PathBuf::from(path);
+            }
             self.entries.insert(
                 key,
                 ConfigEntry {
@@ -241,11 +265,13 @@ impl Store {
         }
     }
 
-    pub fn get_str(&self, key: &str) -> String {
+    /// Borrows a string value; numbers and booleans fall back to their JSON
+    /// spelling only when the entry is not a string.
+    pub fn get_str(&self, key: &str) -> Cow<'_, str> {
         match self.get(key) {
-            Some(Value::String(s)) => s.clone(),
-            Some(Value::Null) | None => String::new(),
-            Some(other) => other.to_string(),
+            Some(Value::String(s)) => Cow::Borrowed(s.as_str()),
+            Some(Value::Null) | None => Cow::Borrowed(""),
+            Some(other) => Cow::Owned(other.to_string()),
         }
     }
 
@@ -262,14 +288,31 @@ impl Store {
         match self.get(key) {
             Some(Value::Array(items)) => items
                 .iter()
-                .map(|v| {
-                    v.as_str()
-                        .map(str::to_string)
-                        .unwrap_or_else(|| v.to_string())
+                .map(|v| match v {
+                    Value::String(s) => s.clone(),
+                    other => other.to_string(),
                 })
                 .collect(),
             Some(Value::String(s)) if !s.is_empty() => vec![s.clone()],
             _ => Vec::new(),
+        }
+    }
+
+    /// Borrowing form of [`Self::get_list`] for callers that only need to read
+    /// the values. `None` only for non-string entries of an array.
+    pub fn get_list_ref(&self, key: &str) -> Option<Vec<&str>> {
+        match self.get(key)? {
+            Value::Array(items) => items.iter().map(Value::as_str).collect::<Option<Vec<_>>>(),
+            Value::String(s) if !s.is_empty() => Some(vec![s.as_str()]),
+            _ => Some(Vec::new()),
+        }
+    }
+
+    pub fn get_list_is_empty(&self, key: &str) -> bool {
+        match self.get(key) {
+            Some(Value::Array(items)) => items.is_empty(),
+            Some(Value::String(s)) => s.is_empty(),
+            _ => true,
         }
     }
 
@@ -283,16 +326,11 @@ impl Store {
     }
 
     pub fn global(&self) -> bool {
-        self.get_bool("global") || self.get_str("location") == "global"
+        self.get_bool("global") || matches!(self.get_str("location").as_ref(), "global")
     }
 
-    pub fn cache(&self) -> PathBuf {
-        let cache = self.get_str("cache");
-        if cache.is_empty() {
-            PathBuf::from(default_cache_dir())
-        } else {
-            PathBuf::from(cache)
-        }
+    pub fn cache(&self) -> &Path {
+        &self.cache_path
     }
 
     pub fn global_dir(&self) -> PathBuf {
@@ -344,7 +382,7 @@ impl Store {
     }
 
     pub fn validate(&self) -> Result<()> {
-        if !self.get_bool("workspaces") && !self.get_list("workspace").is_empty() {
+        if !self.get_bool("workspaces") && !self.get_list_is_empty("workspace") {
             return Err(NpmError::new(
                 "Cannot use --no-workspaces and --workspace at the same time",
             ));
@@ -390,8 +428,12 @@ impl Store {
     /// Removes `key` when the entry was defined at `source`.
     pub fn remove(&mut self, key: &str, source: ConfigSource) {
         let key = normalize_key(key);
-        if self.entries.get(&key).is_some_and(|e| e.source == source) {
-            self.entries.remove(&key);
+        if self
+            .entries
+            .get(key.as_ref())
+            .is_some_and(|e| e.source == source)
+        {
+            self.entries.remove(key.as_ref());
         }
     }
 
@@ -451,9 +493,24 @@ pub struct RepairProblem {
 }
 
 /// Canonical form of a config key: `no-foo=true` is `foo`, and `.npmrc`
-/// keys written with underscores map to their dash spelling.
-pub fn normalize_key(key: &str) -> String {
-    key.strip_prefix("no-").unwrap_or(key).replace('_', "-")
+/// keys written with underscores map to their dash spelling. Keys already in
+/// canonical form are returned borrowed.
+pub fn normalize_key(key: &str) -> Cow<'_, str> {
+    let stripped = key.strip_prefix("no-").unwrap_or(key);
+    if stripped.as_bytes().contains(&b'_') {
+        Cow::Owned(stripped.replace('_', "-"))
+    } else {
+        Cow::Borrowed(stripped)
+    }
+}
+
+/// Whether `candidate` equals `key` with every `_` read as `-`.
+fn dash_matches(candidate: &str, key: &str) -> bool {
+    candidate.len() == key.len()
+        && candidate
+            .bytes()
+            .zip(key.bytes())
+            .all(|(a, b)| a == b || (b == b'_' && a == b'-'))
 }
 
 fn parse_value(raw: &str) -> Value {
@@ -525,11 +582,12 @@ pub fn load_config_files(store: &mut Store) -> Result<()> {
 /// Parses an ini-style `.npmrc` file into the store. Keys keep their
 /// source path so later diagnostics can point at the file.
 pub fn load_ini(store: &mut Store, path: &Path, source: ConfigSource) -> Result<()> {
+    let source_path = path.to_path_buf();
     for (key, value) in crate::cache::read_ini(path)? {
-        let canonical = normalize_key(&key);
+        let canonical = normalize_key(&key).into_owned();
         store.set(Value::String(value), &key, source);
         if let Some(entry) = store.entries.get_mut(&canonical) {
-            entry.source_path = Some(path.to_path_buf());
+            entry.source_path = Some(source_path.clone());
         }
         if key.contains('_') {
             store
@@ -540,7 +598,7 @@ pub fn load_ini(store: &mut Store, path: &Path, source: ConfigSource) -> Result<
                     source,
                     source_path: None,
                 })
-                .source_path = Some(path.to_path_buf());
+                .source_path = Some(source_path.clone());
         }
     }
     Ok(())

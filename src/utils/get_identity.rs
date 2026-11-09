@@ -10,8 +10,8 @@ pub fn get_identity(npm: &dyn crate::npm::Npm) -> Result<String> {
     let key = format!("//{}/:_authToken", strip_scheme(&registry));
     let bare_key = registry
         .split_once("//")
-        .map(|(_, rest)| rest.to_string())
-        .unwrap_or_else(|| registry.clone());
+        .map(|(_, rest)| rest)
+        .unwrap_or(registry.as_ref());
     let username_key = format!("//{bare_key}/:username");
 
     if let Some(username) = npm.store().get(&username_key).and_then(|v| v.as_str()) {

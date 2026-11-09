@@ -5,7 +5,7 @@
 //! `patch`, `config set`) never observe stale data.
 
 use std::path::{Path, PathBuf};
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock};
 use std::time::SystemTime;
 
 use serde_json::Value;
@@ -17,19 +17,23 @@ pub const MANIFEST_CAPACITY: u64 = 1024;
 /// Capacity of the parsed-`.npmrc` cache.
 pub const CONFIG_CAPACITY: u64 = 64;
 
-/// Result of reading and parsing a file.
+/// Result of reading and parsing a file. The payload is kept behind an `Arc`
+/// so lookups hand it out without copying the parsed tree.
 ///
 /// Parse failures are cached too: re-reading a malformed file on every lookup
 /// would only repeat the same work.
 #[derive(Debug, Clone)]
 pub struct CachedFile<T> {
     modified: Option<SystemTime>,
-    content: std::result::Result<T, NpmError>,
+    content: Arc<std::result::Result<T, NpmError>>,
 }
 
 impl<T: Clone> CachedFile<T> {
     fn new(modified: Option<SystemTime>, content: std::result::Result<T, NpmError>) -> Self {
-        Self { modified, content }
+        Self {
+            modified,
+            content: Arc::new(content),
+        }
     }
 }
 
@@ -49,7 +53,7 @@ fn read_validated<T: Clone + Send + Sync + 'static>(
         && entry.modified == modified
         && modified.is_some()
     {
-        return entry.content;
+        return (*entry.content).clone();
     }
 
     let content = std::fs::read_to_string(path)

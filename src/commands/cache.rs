@@ -47,7 +47,7 @@ impl Cache {
             if !npm.store().get_bool("force") {
                 return Err(NpmError::new(CLEAN_WARNING));
             }
-            let _ = std::fs::remove_dir_all(&cache);
+            let _ = std::fs::remove_dir_all(cache);
             return Ok(());
         }
         Err(NpmError::new(
@@ -84,7 +84,7 @@ impl Cache {
         let mut entries = 0usize;
         let mut kept = 0u64;
         let mut bad = 0usize;
-        visit(&cache, &mut |file| match std::fs::metadata(file) {
+        visit(cache, &mut |file| match std::fs::metadata(file) {
             Ok(meta) => {
                 entries += 1;
                 kept += meta.len();

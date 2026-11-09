@@ -1,6 +1,7 @@
 //! Port of `lib/utils/tar.js`: inspects a package tarball and logs its
 //! contents (`npm pack`, `npm stage download`).
 
+use std::borrow::Cow;
 use std::collections::BTreeSet;
 
 use serde_json::Value;
@@ -120,8 +121,17 @@ fn is_upper(path: &str) -> bool {
 }
 
 fn natural_cmp(a: &str, b: &str) -> std::cmp::Ordering {
-    let a_low = a.to_lowercase();
-    let b_low = b.to_lowercase();
+    // Only allocate when the inputs actually contain upper-case letters.
+    let a_low = if a.bytes().any(|b| b.is_ascii_uppercase()) {
+        Cow::Owned(a.to_lowercase())
+    } else {
+        Cow::Borrowed(a)
+    };
+    let b_low = if b.bytes().any(|b| b.is_ascii_uppercase()) {
+        Cow::Owned(b.to_lowercase())
+    } else {
+        Cow::Borrowed(b)
+    };
     let mut ai = a_low.chars().peekable();
     let mut bi = b_low.chars().peekable();
     loop {

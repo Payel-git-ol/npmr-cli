@@ -151,7 +151,7 @@ pub fn key_values(args: &[String]) -> Vec<(String, String)> {
 
 fn config_path(store: &Store, where_: ConfigSource) -> Result<PathBuf> {
     match where_ {
-        ConfigSource::User => Ok(PathBuf::from(store.get_str("userconfig"))),
+        ConfigSource::User => Ok(PathBuf::from(store.get_str("userconfig").as_ref())),
         ConfigSource::Global | ConfigSource::Builtin => {
             Ok(store.global_prefix.join("etc").join("npmrc"))
         }
@@ -164,7 +164,7 @@ fn config_path(store: &Store, where_: ConfigSource) -> Result<PathBuf> {
 }
 
 fn source_for_location(store: &Store) -> ConfigSource {
-    match store.get_str("location").as_str() {
+    match store.get_str("location").as_ref() {
         "global" => ConfigSource::Global,
         "project" => ConfigSource::Project,
         "user" => ConfigSource::User,
@@ -231,7 +231,7 @@ impl Config {
         let mut out = Vec::new();
         for key in keys {
             let value = store.get_str(key);
-            if is_private(key, &value) {
+            if is_private(key, value.as_ref()) {
                 return Err(NpmError::new(format!(
                     "The {key} option is protected, and cannot be retrieved in this way"
                 )));
@@ -239,7 +239,7 @@ impl Config {
             if keys.len() > 1 {
                 out.push(format!("{key}={value}"));
             } else {
-                out.push(value);
+                out.push(value.into_owned());
             }
         }
         crate::output::standard(out.join("\n"));

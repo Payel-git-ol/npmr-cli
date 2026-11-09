@@ -133,7 +133,7 @@ impl Link {
 
     fn link_pkg(&mut self, npm: &mut (dyn Npm + '_)) -> Result<()> {
         let mut paths = vec![npm.prefix()];
-        if npm.store().get_bool("workspaces") || !npm.store().get_list("workspace").is_empty() {
+        if npm.store().get_bool("workspaces") || !npm.store().get_list_is_empty("workspace") {
             if let Ok(workspaces) = crate::utils::set_workspaces::set_workspaces(&*npm) {
                 paths = workspaces.values().map(PathBuf::from).collect();
             }
