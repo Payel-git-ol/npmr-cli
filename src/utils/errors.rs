@@ -76,8 +76,7 @@ impl Default for NpmError {
     }
 }
 
-impl From<std::io::Error> for NpmError {
-    fn from(err: std::io::Error) -> Self {
+impl From<std::io::Error> for NpmError {    fn from(err: std::io::Error) -> Self {
         let code = match err.kind() {
             std::io::ErrorKind::NotFound => "ENOENT",
             std::io::ErrorKind::PermissionDenied => "EACCES",
@@ -88,9 +87,20 @@ impl From<std::io::Error> for NpmError {
     }
 }
 
-pub type Result<T, E = NpmError> = std::result::Result<T, E>;
+impl From<serde_json::Error> for NpmError {
+    fn from(err: serde_json::Error) -> Self {
+        let code = match err.classify() {
+            serde_json::error::Category::Io => "EIO",
+            serde_json::error::Category::Syntax | serde_json::error::Category::Data => {
+                "EJSONPARSE"
+            }
+            serde_json::error::Category::Eof => "EJSONPARSE",
+        };
+        Self::new(format!("Invalid JSON\n{err}")).with_code(code)
+    }
+}
 
-/// Unknown command, thrown from `Npm::cmd`.
+pub type Result<T, E = NpmError> = std::result::Result<T, E>;/// Unknown command, thrown from `Npm::cmd`.
 pub fn unknown_command(command: &str) -> NpmError {
     NpmError::new(format!("Unknown command {command}")).with_code("EUNKNOWNCOMMAND")
 }

@@ -28,6 +28,7 @@ pub fn update_workspaces(npm: &mut (dyn Npm + '_), input: &UpdateWorkspacesInput
         fund: false,
         save,
         update: input.workspaces.clone(),
+        ..Default::default()
     };
     crate::utils::reify_finish::reify(npm, options)
 }
