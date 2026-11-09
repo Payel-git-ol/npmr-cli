@@ -5,7 +5,8 @@ use std::io::{BufRead, IsTerminal, Write};
 
 use crate::utils::errors::NpmError;
 
-pub const OTP_PROMPT: &str = "This command requires a one-time password (OTP) from your authenticator app.
+pub const OTP_PROMPT: &str =
+    "This command requires a one-time password (OTP) from your authenticator app.
 Enter one below. You can also pass one on the command line by appending --otp=123456.
 For more information, see:
 https://docs.npmjs.com/getting-started/using-two-factor-authentication
@@ -54,7 +55,11 @@ pub fn password(default: &str) -> Result<String, NpmError> {
         format!("{PASSWORD_PROMPT}[{default}] ")
     };
     let value = read(&prompt)?;
-    Ok(if value.is_empty() { default.to_string() } else { value })
+    Ok(if value.is_empty() {
+        default.to_string()
+    } else {
+        value
+    })
 }
 
 pub fn username(default: &str) -> Result<String, NpmError> {
@@ -78,7 +83,11 @@ pub fn email(default: &str) -> Result<String, NpmError> {
         format!("{EMAIL_PROMPT}[{default}] ")
     };
     let value = read(&prompt)?;
-    Ok(if value.is_empty() { default.to_string() } else { value })
+    Ok(if value.is_empty() {
+        default.to_string()
+    } else {
+        value
+    })
 }
 
 pub fn stdin_is_tty() -> bool {

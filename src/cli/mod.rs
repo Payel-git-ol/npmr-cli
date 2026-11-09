@@ -84,10 +84,16 @@ fn finish_with_error(npm: &mut NpmCli, err: &mut NpmError) -> i32 {
                 "detail": err.detail.join("\n").trim(),
             }
         });
-        println!("{}", serde_json::to_string_pretty(&payload).unwrap_or_default());
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).unwrap_or_default()
+        );
     }
 
-    eprintln!("\x1b[31mnpm\x1b[0m \x1b[31merror\x1b[0m {}", err.banner("npm ERR!"));
+    eprintln!(
+        "\x1b[31mnpm\x1b[0m \x1b[31merror\x1b[0m {}",
+        err.banner("npm ERR!")
+    );
     if !err.detail.is_empty() {
         for line in &err.detail {
             eprintln!("npm ERR! {line}");
@@ -101,10 +107,7 @@ fn finish_with_error(npm: &mut NpmCli, err: &mut NpmError) -> i32 {
 }
 
 fn current_exe_display() -> String {
-    std::env::args()
-        .take(2)
-        .collect::<Vec<_>>()
-        .join(" ")
+    std::env::args().take(2).collect::<Vec<_>>().join(" ")
 }
 
 /// Hyphen-minus is the only valid dash prefix; these look alike but are not.

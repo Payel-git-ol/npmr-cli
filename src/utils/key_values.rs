@@ -16,10 +16,7 @@ pub fn log_object_with(
     obj: &Map<String, Value>,
     predicate: impl Fn(&str, &Value) -> bool,
 ) -> String {
-    let entries: Vec<(&String, &Value)> = obj
-        .iter()
-        .filter(|(k, v)| predicate(k, v))
-        .collect();
+    let entries: Vec<(&String, &Value)> = obj.iter().filter(|(k, v)| predicate(k, v)).collect();
     let width = entries.iter().map(|(k, _)| k.len()).max().unwrap_or(0);
     entries
         .iter()

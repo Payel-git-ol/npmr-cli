@@ -4,10 +4,10 @@
 
 use std::collections::BTreeSet;
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::npm::Npm;
-use crate::utils::display::{paint, Color};
+use crate::utils::display::{Color, paint};
 use crate::utils::errors::{NpmError, Result};
 use crate::utils::log::verbose;
 
@@ -47,7 +47,10 @@ impl AuditEdge {
         if !is_registry_spec(&self.spec) {
             return None;
         }
-        Some((self.name.clone(), self.spec.trim_start_matches("registry:").to_string()))
+        Some((
+            self.name.clone(),
+            self.spec.trim_start_matches("registry:").to_string(),
+        ))
     }
 }
 
@@ -293,7 +296,10 @@ impl<'a> VerifySignatures<'a> {
                         .collect(),
                 );
             }
-            standard(format!("{}\n", serde_json::to_string_pretty(&payload).unwrap_or_default()));
+            standard(format!(
+                "{}\n",
+                serde_json::to_string_pretty(&payload).unwrap_or_default()
+            ));
             return has_problems;
         }
 
@@ -306,7 +312,11 @@ impl<'a> VerifySignatures<'a> {
                 many.to_string()
             }
         };
-        let audited_plural = if result.audited_with_keys > 1 { "s" } else { "" };
+        let audited_plural = if result.audited_with_keys > 1 {
+            "s"
+        } else {
+            ""
+        };
         standard(format!(
             "audited {} package{audited_plural} in {elapsed_secs}s\n",
             result.audited_with_keys

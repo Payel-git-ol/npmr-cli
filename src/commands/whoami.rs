@@ -6,8 +6,8 @@ use crate::commands::command::{Command, CommandMeta};
 use crate::npm::Npm;
 use crate::utils::errors::Result;
 
-pub static META: CommandMeta = CommandMeta::new("whoami", "Display npm username")
-    .with_params(&["registry"]);
+pub static META: CommandMeta =
+    CommandMeta::new("whoami", "Display npm username").with_params(&["registry"]);
 
 pub struct Whoami;
 

@@ -30,7 +30,11 @@ impl Command for Login {
 
     fn exec(&mut self, npm: &mut (dyn Npm + '_), _args: &[String]) -> Result<()> {
         let registry = npm.store().get_str("registry");
-        let scope = npm.store().get("scope").and_then(|v| v.as_str()).map(str::to_string);
+        let scope = npm
+            .store()
+            .get("scope")
+            .and_then(|v| v.as_str())
+            .map(str::to_string);
 
         let username = crate::utils::read_user_info::username("")?;
         let password = crate::utils::read_user_info::password("")?;

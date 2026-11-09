@@ -125,7 +125,11 @@ fn search(args: &[String], files: &[PathBuf]) -> Vec<Doc> {
             .file_stem()
             .map(|s| s.to_string_lossy().into_owned())
             .unwrap_or_default();
-        results.push(Doc { cmd, lines: pruned, hits });
+        results.push(Doc {
+            cmd,
+            lines: pruned,
+            hits,
+        });
     }
 
     results.sort_by(|a, b| {

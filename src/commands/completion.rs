@@ -52,7 +52,9 @@ impl Command for Completion {
         let words: Vec<&str> = args.iter().map(String::as_str).collect();
         let command = words.iter().skip(1).find(|w| !w.starts_with('-'));
         let completions = match command.and_then(|c| deref(c)) {
-            Some(cmd) if !words.contains(&cmd.as_str()) || words.last() == Some(&args[0].as_str()) => {
+            Some(cmd)
+                if !words.contains(&cmd.as_str()) || words.last() == Some(&args[0].as_str()) =>
+            {
                 complete_commands(current)
             }
             Some(cmd) => match cmd.as_str() {

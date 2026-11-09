@@ -31,7 +31,8 @@ pub fn error_message(er: &mut NpmError, npm: &dyn crate::npm::Npm) -> ErrorMessa
     match er.code.as_deref() {
         Some("ENOLOCK") => {
             let cmd = npm.command().unwrap_or_default().to_string();
-            out.summary.push(line(&cmd, "This command requires an existing lockfile."));
+            out.summary
+                .push(line(&cmd, "This command requires an existing lockfile."));
             out.detail.push(line(
                 &cmd,
                 "Try creating one first with: npm i --package-lock-only",
@@ -94,8 +95,10 @@ pub fn error_message(er: &mut NpmError, npm: &dyn crate::npm::Npm) -> ErrorMessa
                     "",
                     "Unable to authenticate, your authentication token seems to be invalid.",
                 ));
-                out.detail
-                    .push(line("", "To correct this please try logging in again with:\n  npm login"));
+                out.detail.push(line(
+                    "",
+                    "To correct this please try logging in again with:\n  npm login",
+                ));
             }
         }
         Some("E404") => {
@@ -118,14 +121,19 @@ pub fn error_message(er: &mut NpmError, npm: &dyn crate::npm::Npm) -> ErrorMessa
                 .push(line("404", "tarball, folder, http url, or git url."));
         }
         Some("EPUBLISHCONFLICT") => {
-            out.summary.push(line("publish fail", "Cannot publish over existing version."));
+            out.summary.push(line(
+                "publish fail",
+                "Cannot publish over existing version.",
+            ));
             out.detail.push(line(
                 "publish fail",
                 "Update the 'version' field in package.json and try again.",
             ));
             out.detail.push(line("publish fail", ""));
-            out.detail
-                .push(line("publish fail", "To automatically increment version numbers, see:"));
+            out.detail.push(line(
+                "publish fail",
+                "To automatically increment version numbers, see:",
+            ));
             out.detail.push(line("publish fail", "  npm help version"));
         }
         Some("EISGIT") => {
@@ -140,7 +148,10 @@ pub fn error_message(er: &mut NpmError, npm: &dyn crate::npm::Npm) -> ErrorMessa
         }
         Some("EEXIST") => {
             out.summary.push(line("", message));
-            out.detail.push(line("", "Remove the existing file and try again, or run npm"));
+            out.detail.push(line(
+                "",
+                "Remove the existing file and try again, or run npm",
+            ));
             out.detail
                 .push(line("", "with --force to overwrite files recklessly."));
         }
@@ -151,7 +162,10 @@ pub fn error_message(er: &mut NpmError, npm: &dyn crate::npm::Npm) -> ErrorMessa
                 "You need to authorize this machine using `npm login`",
             ));
         }
-        Some("ECONNRESET") | Some("ENOTFOUND") | Some("ETIMEDOUT") | Some("ERR_SOCKET_TIMEOUT")
+        Some("ECONNRESET")
+        | Some("ENOTFOUND")
+        | Some("ETIMEDOUT")
+        | Some("ERR_SOCKET_TIMEOUT")
         | Some("EAI_FAIL") => {
             out.summary.push(line("network", message));
             out.detail.push(line(

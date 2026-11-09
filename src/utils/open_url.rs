@@ -13,9 +13,8 @@ fn assert_valid_url(raw: &str) -> Result<()> {
 
 fn output_msg(npm: &dyn crate::npm::Npm, title: &str, url: &str) {
     if npm.json() {
-        npm.display().standard(
-            &serde_json::json!({ "title": title, "url": url }).to_string(),
-        );
+        npm.display()
+            .standard(&serde_json::json!({ "title": title, "url": url }).to_string());
     } else {
         npm.display().standard(&format!("{title}:\n{url}"));
     }

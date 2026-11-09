@@ -9,11 +9,13 @@ use crate::utils::log::notice;
 use crate::utils::tar::{get_contents, log_tar, read_manifest};
 use crate::utils::validate_uuid::validate_uuid;
 
-pub static META: CommandMeta =
-    CommandMeta::new("download", "Download the tarball of a staged package for inspection")
-        .with_usage(&["<stage-id>"])
-        .with_params(&["json", "registry"])
-        .with_positionals(1);
+pub static META: CommandMeta = CommandMeta::new(
+    "download",
+    "Download the tarball of a staged package for inspection",
+)
+.with_usage(&["<stage-id>"])
+.with_params(&["json", "registry"])
+.with_positionals(1);
 
 pub struct StageDownload;
 

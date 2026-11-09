@@ -9,28 +9,26 @@ use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 use crate::utils::resolve_allow_scripts::resolve_allow_scripts;
 
-pub static META: CommandMeta = CommandMeta::new(
-    "exec",
-    "Run a command from a local or remote npm package",
-)
-.with_params(&[
-    "package",
-    "call",
-    "workspace",
-    "workspaces",
-    "include-workspace-root",
-    "allow-scripts",
-    "strict-allow-scripts",
-    "dangerously-allow-all-scripts",
-])
-.with_usage(&[
-    "-- <pkg>[@<version>] [args...]",
-    "--package=<pkg>[@<version>] -- <cmd> [args...]",
-    "-c '<cmd> [args...]'",
-    "--package=foo -c '<cmd> [args...]'",
-])
-.workspaces()
-.shellout();
+pub static META: CommandMeta =
+    CommandMeta::new("exec", "Run a command from a local or remote npm package")
+        .with_params(&[
+            "package",
+            "call",
+            "workspace",
+            "workspaces",
+            "include-workspace-root",
+            "allow-scripts",
+            "strict-allow-scripts",
+            "dangerously-allow-all-scripts",
+        ])
+        .with_usage(&[
+            "-- <pkg>[@<version>] [args...]",
+            "--package=<pkg>[@<version>] -- <cmd> [args...]",
+            "-c '<cmd> [args...]'",
+            "--package=foo -c '<cmd> [args...]'",
+        ])
+        .workspaces()
+        .shellout();
 
 pub struct Exec;
 
@@ -39,7 +37,12 @@ impl Exec {
         Self
     }
 
-    fn call_exec(&self, npm: &mut (dyn Npm + '_), args: &[String], run_path: Option<&str>) -> Result<()> {
+    fn call_exec(
+        &self,
+        npm: &mut (dyn Npm + '_),
+        args: &[String],
+        run_path: Option<&str>,
+    ) -> Result<()> {
         let call = npm.store().get_str("call");
         if !call.is_empty() && !args.is_empty() {
             return Err(META.usage_error(""));

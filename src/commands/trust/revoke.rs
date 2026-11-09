@@ -11,16 +11,18 @@ use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 
 static META_DEFINITIONS: &[FlagDef] = &[FlagDef::new(
-        "id",
-        FlagType::String,
-        "ID of the trusted relationship to revoke",
-    )
-    .required()];
+    "id",
+    FlagType::String,
+    "ID of the trusted relationship to revoke",
+)
+.required()];
 
-pub static META: CommandMeta = CommandMeta::new("revoke", "Revoke a trusted relationship for a package")
-    .with_usage(&["[package] --id=<trust-id>"])
-    .with_params(&["dry-run", "registry"])
-        .with_definitions(META_DEFINITIONS).with_positionals(1);
+pub static META: CommandMeta =
+    CommandMeta::new("revoke", "Revoke a trusted relationship for a package")
+        .with_usage(&["[package] --id=<trust-id>"])
+        .with_params(&["dry-run", "registry"])
+        .with_definitions(META_DEFINITIONS)
+        .with_positionals(1);
 
 pub struct TrustRevoke;
 

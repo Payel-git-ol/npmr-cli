@@ -13,12 +13,17 @@ use crate::commands::trust::gitlab::GitLabProvider;
 use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 
-static META_DEFINITIONS: &[FlagDef] = &[FlagDef::new("id", FlagType::String, "Trust configuration id")];
+static META_DEFINITIONS: &[FlagDef] = &[FlagDef::new(
+    "id",
+    FlagType::String,
+    "Trust configuration id",
+)];
 
 pub static META: CommandMeta = CommandMeta::new("list", "List trusted relationships for a package")
     .with_usage(&["[package]"])
     .with_params(&["json", "registry"])
-        .with_definitions(META_DEFINITIONS).with_positionals(1);
+    .with_definitions(META_DEFINITIONS)
+    .with_positionals(1);
 
 pub struct TrustList;
 

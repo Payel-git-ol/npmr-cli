@@ -21,8 +21,8 @@ pub fn ping(registry: &str) -> Result<Map<String, Value>> {
 }
 
 fn resolve_authority(url: &str) -> Result<std::net::SocketAddr> {
-    let parsed = url::Url::parse(url)
-        .map_err(|err| crate::utils::errors::NpmError::new(err.to_string()))?;
+    let parsed =
+        url::Url::parse(url).map_err(|err| crate::utils::errors::NpmError::new(err.to_string()))?;
     let host = parsed
         .host_str()
         .ok_or_else(|| crate::utils::errors::NpmError::new("registry url has no host"))?;

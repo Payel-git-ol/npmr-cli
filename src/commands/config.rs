@@ -156,8 +156,9 @@ fn config_path(store: &Store, where_: ConfigSource) -> Result<PathBuf> {
             Ok(store.global_prefix.join("etc").join("npmrc"))
         }
         ConfigSource::Project => Ok(Path::new(&store.local_prefix).join(".npmrc")),
-        ConfigSource::Cli => Err(NpmError::new("Cannot edit the command line configuration")
-            .with_code("ESAVECLI")),
+        ConfigSource::Cli => {
+            Err(NpmError::new("Cannot edit the command line configuration").with_code("ESAVECLI"))
+        }
         ConfigSource::Default => Ok(Path::new(&store.local_prefix).join(".npmrc")),
     }
 }
@@ -345,10 +346,9 @@ impl Config {
                 let display = display_var(key, &value);
                 match store.find(key) {
                     Some(found) if found == source => msg.push(display),
-                    Some(found) => msg.push(format!(
-                        "; {display} ; overridden by {}",
-                        found.as_str()
-                    )),
+                    Some(found) => {
+                        msg.push(format!("; {display} ; overridden by {}", found.as_str()))
+                    }
                     None => msg.push(display),
                 }
             }
@@ -497,7 +497,12 @@ mod tests {
 
     #[test]
     fn key_values_pairs_bare_and_equals() {
-        let args = vec!["a=1".to_string(), "b".to_string(), "2".to_string(), "c".to_string()];
+        let args = vec![
+            "a=1".to_string(),
+            "b".to_string(),
+            "2".to_string(),
+            "c".to_string(),
+        ];
         assert_eq!(
             key_values(&args),
             vec![

@@ -17,10 +17,7 @@ pub trait LifecycleCommand: Command {
 }
 
 /// Builds the shared meta for restart/start/stop/test.
-pub const fn lifecycle_meta(
-    name: &'static str,
-    description: &'static str,
-) -> CommandMeta {
+pub const fn lifecycle_meta(name: &'static str, description: &'static str) -> CommandMeta {
     CommandMeta::new(name, description)
         .with_usage(&["[-- <args>]"])
         .with_params(&["ignore-scripts", "script-shell"])

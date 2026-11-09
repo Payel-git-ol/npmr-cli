@@ -4,7 +4,8 @@ use crate::commands::command::{Command, CommandMeta};
 use crate::npm::Npm;
 use crate::utils::errors::Result;
 
-pub static META: CommandMeta = CommandMeta::new("prefix", "Display prefix").with_params(&["global"]);
+pub static META: CommandMeta =
+    CommandMeta::new("prefix", "Display prefix").with_params(&["global"]);
 
 pub struct Prefix;
 
@@ -26,8 +27,7 @@ impl Command for Prefix {
     }
 
     fn exec(&mut self, npm: &mut (dyn Npm + '_), _args: &[String]) -> Result<()> {
-        npm.display()
-            .standard(&npm.prefix().to_string_lossy());
+        npm.display().standard(&npm.prefix().to_string_lossy());
         Ok(())
     }
 }

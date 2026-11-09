@@ -39,7 +39,8 @@ fn covered(node: &ScriptNode, policy: Option<&Policy>) -> bool {
         return false;
     };
     policy.keys().any(|key| {
-        crate::utils::allow_scripts_writer::parse_key(key)
-            .is_some_and(|parsed| crate::utils::allow_scripts_writer::key_targets_node(&parsed, node))
+        crate::utils::allow_scripts_writer::parse_key(key).is_some_and(|parsed| {
+            crate::utils::allow_scripts_writer::key_targets_node(&parsed, node)
+        })
     })
 }

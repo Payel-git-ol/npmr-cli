@@ -1,7 +1,7 @@
 //! Port of `lib/utils/audit-error.js`: prints an audit endpoint error (or
 //! nothing when the report has none) and reports whether one was present.
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
@@ -44,7 +44,10 @@ pub fn audit_error(npm: &dyn Npm, report: &AuditReport, command: &str) -> Result
             "statusCode": error.status_code,
             "body": error.body,
         });
-        crate::output::standard(format!("{}\n", serde_json::to_string(&payload).unwrap_or_default()));
+        crate::output::standard(format!(
+            "{}\n",
+            serde_json::to_string(&payload).unwrap_or_default()
+        ));
     } else {
         crate::output::standard(format!("{}\n", error.body));
     }

@@ -44,7 +44,9 @@ fn load(path: &Path) -> Result<Map<String, Value>> {
         .with_code("ENOENT")
     })?;
     serde_json::from_str::<Value>(&text)
-        .map_err(|err| NpmError::new(format!("Failed to parse json\n{err}")).with_code("EJSONPARSE"))?
+        .map_err(|err| {
+            NpmError::new(format!("Failed to parse json\n{err}")).with_code("EJSONPARSE")
+        })?
         .as_object()
         .cloned()
         .ok_or_else(|| NpmError::new("package.json must contain an object").with_code("EJSONPARSE"))
@@ -180,7 +182,6 @@ fn delete_in(value: &mut Value, segs: &[Seg]) {
     }
 }
 
-
 fn get_in_mut<'a>(value: &'a mut Value, segs: &[Seg]) -> Option<&'a mut Value> {
     let Some((first, rest)) = segs.split_first() else {
         return Some(value);
@@ -203,7 +204,13 @@ fn format_jsonish(value: &Value, _color: bool) -> String {
 }
 
 impl Pkg {
-    fn get(&self, npm: &mut (dyn Npm + '_), path: &Path, args: &[String], workspace: Option<&str>) -> Result<()> {
+    fn get(
+        &self,
+        npm: &mut (dyn Npm + '_),
+        path: &Path,
+        args: &[String],
+        workspace: Option<&str>,
+    ) -> Result<()> {
         let manifest = load(path)?;
         let json = npm.json();
         let root = Value::Object(manifest);
@@ -268,8 +275,9 @@ impl Pkg {
                 return Err(META.usage_error("npm pkg set expects a key=value pair of args."));
             }
             let value = if json {
-                serde_json::from_str(value)
-                    .map_err(|err| NpmError::new(format!("Failed to parse json\n{err}")).with_code("EJSONPARSE"))?
+                serde_json::from_str(value).map_err(|err| {
+                    NpmError::new(format!("Failed to parse json\n{err}")).with_code("EJSONPARSE")
+                })?
             } else {
                 Value::String(value.to_string())
             };
@@ -309,12 +317,18 @@ impl Pkg {
         save(path, &manifest)
     }
 
-    fn exec_at(&mut self, npm: &mut (dyn Npm + '_), args: &[String], path: PathBuf, workspace: Option<String>) -> Result<()> {
+    fn exec_at(
+        &mut self,
+        npm: &mut (dyn Npm + '_),
+        args: &[String],
+        path: PathBuf,
+        workspace: Option<String>,
+    ) -> Result<()> {
         if npm.global() {
-            return Err(NpmError::new(
-                "There's no package.json file to manage on global mode",
-            )
-            .with_code("EPKGGLOBAL"));
+            return Err(
+                NpmError::new("There's no package.json file to manage on global mode")
+                    .with_code("EPKGGLOBAL"),
+            );
         }
         let Some(cmd) = args.first() else {
             return Err(META.usage_error(""));
@@ -372,11 +386,23 @@ mod tests {
     #[test]
     fn set_nested_and_array() {
         let mut v = serde_json::json!({});
-        set_in(&mut v, &parse_path("scripts.test"), Value::String("x".into()));
+        set_in(
+            &mut v,
+            &parse_path("scripts.test"),
+            Value::String("x".into()),
+        );
         assert_eq!(v["scripts"]["test"], "x");
-        set_in(&mut v, &parse_path("files[].name"), Value::String("a".into()));
+        set_in(
+            &mut v,
+            &parse_path("files[].name"),
+            Value::String("a".into()),
+        );
         assert_eq!(v["files"][0]["name"], "a");
-        set_in(&mut v, &parse_path("keywords[0]"), Value::String("k".into()));
+        set_in(
+            &mut v,
+            &parse_path("keywords[0]"),
+            Value::String("k".into()),
+        );
         assert_eq!(v["keywords"][0], "k");
     }
 

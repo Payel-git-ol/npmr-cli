@@ -7,24 +7,26 @@ use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 use crate::utils::log::info;
 
-pub static META: CommandMeta = CommandMeta::new(
-    "sbom",
-    "Generate a Software Bill of Materials (SBOM)",
-)
-.with_params(&[
-    "omit",
-    "package-lock-only",
-    "sbom-format",
-    "sbom-type",
-    "workspace",
-    "workspaces",
-])
-.workspaces();
+pub static META: CommandMeta =
+    CommandMeta::new("sbom", "Generate a Software Bill of Materials (SBOM)")
+        .with_params(&[
+            "omit",
+            "package-lock-only",
+            "sbom-format",
+            "sbom-type",
+            "workspace",
+            "workspaces",
+        ])
+        .workspaces();
 
 pub const SBOM_FORMATS: &[&str] = &["cyclonedx", "spdx"];
 
 /// Builds the dependency selector `npm sbom` queries the tree with.
-pub fn build_selector(omit: &[String], workspaces_enabled: bool, workspace_names: &[String]) -> String {
+pub fn build_selector(
+    omit: &[String],
+    workspaces_enabled: bool,
+    workspace_names: &[String],
+) -> String {
     let omits: String = omit.iter().map(|o| format!(":not(.{o})")).collect();
     let selector = if !workspaces_enabled {
         format!(":root > :not(.workspace){omits},:root > :not(.workspace) *{omits},:extraneous")

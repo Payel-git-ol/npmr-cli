@@ -1,7 +1,9 @@
 //! Port of `lib/commands/repo.js`.
 
 use crate::commands::command::{Command, CommandMeta};
-use crate::commands::package_url_cmd::{HostedKind, PackageUrlCommand, hosted_url, package_url_meta};
+use crate::commands::package_url_cmd::{
+    HostedKind, PackageUrlCommand, hosted_url, package_url_meta,
+};
 use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 use serde_json::Value;
@@ -41,21 +43,22 @@ impl PackageUrlCommand for Repo {
             _ => None,
         };
         let Some(rurl) = rurl else {
-            return Err(NpmError::new("no repository: could not get url".to_string())
-            .with_code("ENOREPO")
-            .with_summary(spec.to_string()));
+            return Err(
+                NpmError::new("no repository: could not get url".to_string())
+                    .with_code("ENOREPO")
+                    .with_summary(spec.to_string()),
+            );
         };
 
         if let Some(url) = hosted_url(mani, HostedKind::Browse) {
             return Ok(url);
         }
 
-        unknown_hosted_url(&rurl)
-            .ok_or_else(|| {
-                NpmError::new("no repository: could not get url")
-                    .with_code("ENOREPO")
-                    .with_summary(spec.to_string())
-            })
+        unknown_hosted_url(&rurl).ok_or_else(|| {
+            NpmError::new("no repository: could not get url")
+                .with_code("ENOREPO")
+                .with_summary(spec.to_string())
+        })
     }
 }
 

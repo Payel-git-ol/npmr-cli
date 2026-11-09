@@ -67,14 +67,17 @@ impl Diff {
         let name = std::fs::read_to_string(top.join("package.json"))
             .ok()
             .and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok())
-            .and_then(|v| v.get("name").and_then(serde_json::Value::as_str).map(str::to_string));
+            .and_then(|v| {
+                v.get("name")
+                    .and_then(serde_json::Value::as_str)
+                    .map(str::to_string)
+            });
         match name {
             Some(name) if !name.is_empty() => Ok(name),
             _ => {
                 verbose("diff", &[&"could not read project dir package.json"]);
-                Err(META.usage_error(
-                    "Needs multiple arguments to compare or run from a project dir.",
-                ))
+                Err(META
+                    .usage_error("Needs multiple arguments to compare or run from a project dir."))
             }
         }
     }
@@ -101,12 +104,17 @@ impl Diff {
         let pkg_name = std::fs::read_to_string(top.join("package.json"))
             .ok()
             .and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok())
-            .and_then(|v| v.get("name").and_then(serde_json::Value::as_str).map(str::to_string))
+            .and_then(|v| {
+                v.get("name")
+                    .and_then(serde_json::Value::as_str)
+                    .map(str::to_string)
+            })
             .filter(|n| !n.is_empty());
         if pkg_name.is_none() {
             verbose("diff", &[&"could not read project dir package.json"]);
         }
-        let missing = || META.usage_error("Needs multiple arguments to compare or run from a project dir.");
+        let missing =
+            || META.usage_error("Needs multiple arguments to compare or run from a project dir.");
 
         if is_version_req(&a) {
             let Some(pkg_name) = pkg_name else {
@@ -128,7 +136,11 @@ impl Diff {
         };
         let _ = pkg_name;
         let (name, raw_spec) = split_spec(&a);
-        let raw_spec = if raw_spec.is_empty() { "*".to_string() } else { raw_spec };
+        let raw_spec = if raw_spec.is_empty() {
+            "*".to_string()
+        } else {
+            raw_spec
+        };
         Err(NpmError::new(format!(
             "Cannot diff {name}@{raw_spec}: reading the install tree and registry is not implemented yet"
         ))
@@ -178,14 +190,17 @@ fn convert_versions_to_specs(
     let pkg_name = std::fs::read_to_string(top.join("package.json"))
         .ok()
         .and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok())
-        .and_then(|v| v.get("name").and_then(serde_json::Value::as_str).map(str::to_string))
+        .and_then(|v| {
+            v.get("name")
+                .and_then(serde_json::Value::as_str)
+                .map(str::to_string)
+        })
         .filter(|n| !n.is_empty());
 
     if semver_a && semver_b {
         let Some(pkg_name) = pkg_name else {
-            return Err(META.usage_error(
-                "Needs to be run from a project dir in order to diff two versions.",
-            ));
+            return Err(META
+                .usage_error("Needs to be run from a project dir in order to diff two versions."));
         };
         return Ok((format!("{pkg_name}@{a}"), format!("{pkg_name}@{b}")));
     }

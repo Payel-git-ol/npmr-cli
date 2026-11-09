@@ -4,7 +4,8 @@ use crate::commands::command::{Command, CommandMeta};
 use crate::npm::Npm;
 use crate::utils::errors::Result;
 
-pub static META: CommandMeta = CommandMeta::new("root", "Display npm root").with_params(&["global"]);
+pub static META: CommandMeta =
+    CommandMeta::new("root", "Display npm root").with_params(&["global"]);
 
 pub struct Root;
 

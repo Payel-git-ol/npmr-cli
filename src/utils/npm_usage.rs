@@ -84,7 +84,11 @@ fn cmd_names() -> String {
     }
 
     let joined = out.join(&indent_newline(INDENT));
-    format!("{}{}", indent_newline(INDENT), &joined[2.min(joined.len())..])
+    format!(
+        "{}{}",
+        indent_newline(INDENT),
+        &joined[2.min(joined.len())..]
+    )
 }
 
 fn cmd_usages(npm: &(dyn Npm + '_)) -> String {

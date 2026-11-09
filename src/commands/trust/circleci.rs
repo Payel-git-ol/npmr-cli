@@ -35,7 +35,11 @@ static META_DEFINITIONS: &[FlagDef] = &[
         "CircleCI repository origin in format 'provider/owner/repo'",
     )
     .required(),
-    FlagDef::new("context-id", FlagType::List, "CircleCI context UUID to match"),
+    FlagDef::new(
+        "context-id",
+        FlagType::List,
+        "CircleCI context UUID to match",
+    ),
     FlagDef::new(
         "allow-publish",
         FlagType::Boolean,
@@ -141,14 +145,20 @@ fn required_flag<'a>(flags: &'a Map<String, Value>, key: &str) -> Result<&'a str
         .ok_or_else(|| NpmError::new(format!("{key} is required")))
 }
 
-fn flags_to_options(npm: &mut (dyn Npm + '_), positional: &[String], flags: &Map<String, Value>) -> Result<TrustValues> {
+fn flags_to_options(
+    npm: &mut (dyn Npm + '_),
+    positional: &[String],
+    flags: &Map<String, Value>,
+) -> Result<TrustValues> {
     let content = optional_package_json(npm);
     let pkg_name = positional
         .first()
         .map(String::as_str)
         .or_else(|| content.get("name").and_then(Value::as_str))
         .ok_or_else(|| {
-            NpmError::new("Package name must be specified either as an argument or in package.json file")
+            NpmError::new(
+                "Package name must be specified either as an argument or in package.json file",
+            )
         })?;
 
     let org_id = required_flag(flags, "org-id")?;
@@ -193,7 +203,9 @@ fn flags_to_options(npm: &mut (dyn Npm + '_), positional: &[String], flags: &Map
     let mut urls = Map::new();
     urls.insert(
         "package".into(),
-        frontend_url(npm, pkg_name).map(Value::String).unwrap_or(Value::Null),
+        frontend_url(npm, pkg_name)
+            .map(Value::String)
+            .unwrap_or(Value::Null),
     );
     urls.insert(
         "vcsOrigin".into(),

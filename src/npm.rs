@@ -39,7 +39,10 @@ pub trait Npm: Send + Sync {
             flat.insert(key, value);
         }
         flat.insert("nodeVersion".into(), Value::String("rust".into()));
-        flat.insert("npmVersion".into(), Value::String(self.version().to_string()));
+        flat.insert(
+            "npmVersion".into(),
+            Value::String(self.version().to_string()),
+        );
         if let Some(command) = self.command() {
             flat.insert("npmCommand".into(), Value::String(command.to_string()));
         }
@@ -194,18 +197,18 @@ impl NpmCli {
 
         if self.store.get_bool("versions") {
             self.argv = vec!["version".into()];
-            self.store.set(Value::Bool(false), "usage", ConfigSource::Cli);
+            self.store
+                .set(Value::Bool(false), "usage", ConfigSource::Cli);
         } else {
             self.argv = self.store.parsed_argv.remain.clone();
         }
 
         let command_arg = self.argv.first().cloned();
 
-        let loglevel = Level::from_str_lossy(&self.store.get_str("loglevel"))
-            .ok_or_else(|| {
-                let bad = self.store.get_str("loglevel");
-                NpmError::new(format!("Invalid loglevel: {bad}")).with_code("EBADLOGFN")
-            })?;
+        let loglevel = Level::from_str_lossy(&self.store.get_str("loglevel")).ok_or_else(|| {
+            let bad = self.store.get_str("loglevel");
+            NpmError::new(format!("Invalid loglevel: {bad}")).with_code("EBADLOGFN")
+        })?;
 
         let color = self.store.get_str("color");
         let stdout_color = match color.as_str() {
@@ -243,8 +246,10 @@ impl NpmCli {
         }
 
         if let Some(where_) = self.store.find("extension-file") {
-            if !matches!(where_, ConfigSource::Cli | ConfigSource::Project | ConfigSource::Default)
-            {
+            if !matches!(
+                where_,
+                ConfigSource::Cli | ConfigSource::Project | ConfigSource::Default
+            ) {
                 return Err(NpmError::new(format!(
                     "`extension-file` may only be set in project config or on the command line, not from {} config",
                     where_.as_str()
@@ -260,17 +265,24 @@ impl NpmCli {
         }
 
         self.title = std::iter::once("npm".to_string())
-            .chain(self.argv.iter().skip(1).map(|a| crate::utils::redact::redact(a)))
+            .chain(
+                self.argv
+                    .iter()
+                    .skip(1)
+                    .map(|a| crate::utils::redact::redact(a)),
+            )
             .collect::<Vec<_>>()
             .join(" ");
         self.argv_clean = redact_log(&self.argv);
         crate::utils::log::verbose("title", &[&self.title]);
-        crate::utils::log::verbose(
-            "argv",
-            &[&self.argv_clean.join(" ")],
-        );
+        crate::utils::log::verbose("argv", &[&self.argv_clean.join(" ")]);
 
-        if let Some(scope) = self.store.get("scope").and_then(Value::as_str).map(str::to_string) {
+        if let Some(scope) = self
+            .store
+            .get("scope")
+            .and_then(Value::as_str)
+            .map(str::to_string)
+        {
             if !scope.is_empty() && !scope.starts_with('@') {
                 self.store.set(
                     Value::String(format!("@{scope}")),
@@ -356,7 +368,11 @@ impl NpmCli {
                 .iter()
                 .map(|p| p.to_string_lossy().into_owned())
                 .collect();
-            let file_content = format!("Log files:\n{}\n\n{}\n", log_files.join("\n"), content.trim());
+            let file_content = format!(
+                "Log files:\n{}\n\n{}\n",
+                log_files.join("\n"),
+                content.trim()
+            );
             match std::fs::write(&file_path, file_content) {
                 Ok(()) => crate::utils::log::verbose(
                     "",
@@ -364,7 +380,9 @@ impl NpmCli {
                 ),
                 Err(file_err) => crate::utils::log::warn(
                     "",
-                    &[&format!("Could not write error message to {file} due to {file_err}")],
+                    &[&format!(
+                        "Could not write error message to {file} due to {file_err}"
+                    )],
                 ),
             }
         }

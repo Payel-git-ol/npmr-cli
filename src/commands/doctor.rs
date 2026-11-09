@@ -9,12 +9,11 @@ use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 use crate::utils::log::{error, info, warn};
 
-pub static META: CommandMeta = CommandMeta::new("doctor", "Check the health of your npm environment")
-    .with_params(&["registry"])
-    .with_usage(&[
-        "[connection] [registry] [versions] [environment] [cache] [permissions]",
-    ])
-    .skip_validation();
+pub static META: CommandMeta =
+    CommandMeta::new("doctor", "Check the health of your npm environment")
+        .with_params(&["registry"])
+        .with_usage(&["[connection] [registry] [versions] [environment] [cache] [permissions]"])
+        .skip_validation();
 
 const R_OK: u32 = 0b001;
 const W_OK: u32 = 0b010;
@@ -144,8 +143,10 @@ impl Doctor {
 
     fn latest_node_version(&self) -> Result<String> {
         info("doctor", &[&"Getting Node.js release information"]);
-        Err(NpmError::new("reading nodejs.org release data is not implemented yet")
-            .with_code("ENOTSUP"))
+        Err(
+            NpmError::new("reading nodejs.org release data is not implemented yet")
+                .with_code("ENOTSUP"),
+        )
     }
 
     fn check_npm_registry(&self, npm: &dyn Npm) -> Result<String> {
@@ -226,10 +227,13 @@ impl Doctor {
                 ok = false;
                 error(
                     "doctor",
-                    &[&"checkFilesPermission", &format!(
-                        "Missing permissions on {shown} (expect: {})",
-                        mask_label(mask)
-                    )],
+                    &[
+                        &"checkFilesPermission",
+                        &format!(
+                            "Missing permissions on {shown} (expect: {})",
+                            mask_label(mask)
+                        ),
+                    ],
                 );
                 continue;
             }
@@ -261,7 +265,10 @@ impl Doctor {
         }
     }
 
-    #[expect(dead_code, reason = "cache verification is not wired into the checkup yet")]
+    #[expect(
+        dead_code,
+        reason = "cache verification is not wired into the checkup yet"
+    )]
     fn verify_cached_files(&self, npm: &dyn Npm) -> Result<String> {
         info(
             "doctor",
@@ -303,7 +310,11 @@ impl Doctor {
                 CheckKind::Ping,
             ),
             (&["versions"], "Checking npm version", CheckKind::LatestNpm),
-            (&["versions"], "Checking node version", CheckKind::LatestNode),
+            (
+                &["versions"],
+                "Checking node version",
+                CheckKind::LatestNode,
+            ),
             (
                 &["registry"],
                 "Checking configured npm registry",

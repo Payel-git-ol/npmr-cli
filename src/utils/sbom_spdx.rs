@@ -1,10 +1,10 @@
 //! Port of `lib/utils/sbom-spdx.js`: renders the install tree as an
 //! SPDX 2.3 document.
 
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 use crate::npm::Npm;
-use crate::utils::sbom_cyclonedx::{random_uuid, SbomEdge, SbomNode};
+use crate::utils::sbom_cyclonedx::{SbomEdge, SbomNode, random_uuid};
 
 const SPDX_SCHEMA_VERSION: &str = "SPDX-2.3";
 const SPDX_DATA_LICENSE: &str = "CC0-1.0";
@@ -114,11 +114,7 @@ fn spdx_item(node: &SbomNode, package_type: Option<&str>) -> Value {
         "licenseDeclared".into(),
         json!(license(node).unwrap_or_else(|| NO_ASSERTION.to_string())),
     );
-    let purl = format!(
-        "pkg:npm/{}@{}",
-        encoded_name(&node.name),
-        node.version
-    );
+    let purl = format!("pkg:npm/{}@{}", encoded_name(&node.name), node.version);
     pkg.insert(
         "externalRefs".into(),
         json!([{
@@ -220,11 +216,7 @@ pub fn spdx_output(npm: &dyn Npm, nodes: &[SbomNode], package_type: Option<&str>
     all_relationships.extend(relationships);
 
     let mut packages = vec![spdx_item(root, package_type)];
-    packages.extend(
-        children
-            .iter()
-            .map(|node| spdx_item(node, package_type)),
-    );
+    packages.extend(children.iter().map(|node| spdx_item(node, package_type)));
 
     json!({
         "spdxVersion": SPDX_SCHEMA_VERSION,

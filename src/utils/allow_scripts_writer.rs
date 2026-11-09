@@ -163,8 +163,10 @@ fn is_semver_like(spec: &str) -> bool {
 pub fn key_targets_node(key: &PolicyKey, node: &ScriptNode) -> bool {
     match key {
         PolicyKey::Name(name) | PolicyKey::Versions(name, _) => *name == node.name,
-        PolicyKey::Other(spec) => node.resolved.as_deref() == Some(spec.as_str())
-            || node.spec.as_deref() == Some(spec.as_str()),
+        PolicyKey::Other(spec) => {
+            node.resolved.as_deref() == Some(spec.as_str())
+                || node.spec.as_deref() == Some(spec.as_str())
+        }
     }
 }
 
@@ -343,18 +345,13 @@ pub fn apply_approval_for_package(
         }
     }
 
-    remove_if(
-        &mut allow_scripts,
-        &mut changes,
-        "removed-stale",
-        &|key| {
-            parse_key(key).is_some_and(|parsed| {
-                key_targets_node(&parsed, sample)
-                    && is_single_version_pin(&parsed)
-                    && !installed.iter().any(|i| i == key)
-            })
-        },
-    );
+    remove_if(&mut allow_scripts, &mut changes, "removed-stale", &|key| {
+        parse_key(key).is_some_and(|parsed| {
+            key_targets_node(&parsed, sample)
+                && is_single_version_pin(&parsed)
+                && !installed.iter().any(|i| i == key)
+        })
+    });
 
     for key in &installed {
         if allow_scripts.get(key).and_then(Value::as_bool) != Some(true) {
@@ -484,7 +481,10 @@ mod tests {
     #[test]
     fn parses_name_and_pin_keys() {
         assert_eq!(parse_key("canvas"), Some(PolicyKey::Name("canvas".into())));
-        assert_eq!(parse_key("canvas@*"), Some(PolicyKey::Name("canvas".into())));
+        assert_eq!(
+            parse_key("canvas@*"),
+            Some(PolicyKey::Name("canvas".into()))
+        );
         assert_eq!(parse_key("@a/b"), Some(PolicyKey::Name("@a/b".into())));
         assert!(matches!(
             parse_key("canvas@1.2.3"),
@@ -508,6 +508,9 @@ mod tests {
             has_scripts: true,
         };
         let result = apply_approval_for_package(&existing, &[&node], true);
-        assert_eq!(result.allow_scripts.get("canvas@1.2.3"), Some(&Value::Bool(true)));
+        assert_eq!(
+            result.allow_scripts.get("canvas@1.2.3"),
+            Some(&Value::Bool(true))
+        );
     }
 }

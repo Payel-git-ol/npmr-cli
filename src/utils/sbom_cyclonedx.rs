@@ -1,7 +1,7 @@
 //! Port of `lib/utils/sbom-cyclonedx.js`: renders the install tree as a
 //! CycloneDX 1.5 BOM.
 
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 use crate::npm::Npm;
 
@@ -143,10 +143,18 @@ fn purl(node: &SbomNode) -> String {
                 percent_encode(package),
                 percent_encode(&node.version)
             ),
-            None => format!("pkg:npm/{}@{}", percent_encode(rest), percent_encode(&node.version)),
+            None => format!(
+                "pkg:npm/{}@{}",
+                percent_encode(rest),
+                percent_encode(&node.version)
+            ),
         }
     } else {
-        format!("pkg:npm/{}@{}", percent_encode(name), percent_encode(&node.version))
+        format!(
+            "pkg:npm/{}@{}",
+            percent_encode(name),
+            percent_encode(&node.version)
+        )
     };
     if is_git_node(node)
         && let Some(resolved) = &node.resolved
@@ -401,6 +409,10 @@ mod tests {
             resolved: Some("git+https://github.com/a/b.git".into()),
             ..Default::default()
         };
-        assert!(purl(&plain).contains("vcs_url=git+https:%2F%2Fgithub.com%2Fa%2Fb.git"), "{}", purl(&plain));
+        assert!(
+            purl(&plain).contains("vcs_url=git+https:%2F%2Fgithub.com%2Fa%2Fb.git"),
+            "{}",
+            purl(&plain)
+        );
     }
 }

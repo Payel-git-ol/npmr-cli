@@ -1,7 +1,9 @@
 //! Port of `lib/commands/bugs.js`.
 
 use crate::commands::command::{Command, CommandMeta};
-use crate::commands::package_url_cmd::{HostedKind, PackageUrlCommand, hosted_url, package_url_meta};
+use crate::commands::package_url_cmd::{
+    HostedKind, PackageUrlCommand, hosted_url, package_url_meta,
+};
 use crate::npm::Npm;
 use crate::utils::errors::Result;
 use serde_json::Value;

@@ -82,10 +82,7 @@ fn read_package_json(dir: &Path) -> Result<serde_json::Value> {
 
 /// Reads `workspaces` (array or `{packages}`) and expands the glob patterns to
 /// package directories containing a `package.json`.
-fn map_workspaces(
-    root: &Path,
-    pkg: &serde_json::Value,
-) -> Result<BTreeMap<String, String>> {
+fn map_workspaces(root: &Path, pkg: &serde_json::Value) -> Result<BTreeMap<String, String>> {
     let mut patterns: Vec<String> = Vec::new();
     match pkg.get("workspaces") {
         Some(serde_json::Value::Array(items)) => {
@@ -101,7 +98,11 @@ fn map_workspaces(
 
     let mut res = BTreeMap::new();
     for pattern in patterns {
-        let full = format!("{}/{}", root.to_string_lossy().replace('\\', "/"), globify(&pattern));
+        let full = format!(
+            "{}/{}",
+            root.to_string_lossy().replace('\\', "/"),
+            globify(&pattern)
+        );
         if let Ok(paths) = glob::glob(&full) {
             let mut matches: Vec<PathBuf> = paths.filter_map(|p| p.ok()).collect();
             matches.sort();
@@ -111,10 +112,7 @@ fn map_workspaces(
                 }
                 if let Ok(manifest) = read_package_json(&dir) {
                     if let Some(name) = manifest.get("name").and_then(|v| v.as_str()) {
-                        res.insert(
-                            name.to_string(),
-                            dir.to_string_lossy().into_owned(),
-                        );
+                        res.insert(name.to_string(), dir.to_string_lossy().into_owned());
                     }
                 }
             }

@@ -56,7 +56,11 @@ pub trait ArboristCommand: Command {
         let cwd = std::env::current_dir().unwrap_or_else(|_| npm.local_prefix().to_path_buf());
         let prefix = npm.local_prefix().to_path_buf();
         let prefix_inside_cwd = cwd.starts_with(&prefix) && cwd != prefix;
-        let relative_from = if prefix_inside_cwd { prefix.clone() } else { cwd };
+        let relative_from = if prefix_inside_cwd {
+            prefix.clone()
+        } else {
+            cwd
+        };
         get_workspaces::get_workspaces(&get_workspaces_input(
             npm.store().get_list("workspace"),
             prefix,
@@ -84,11 +88,17 @@ fn get_workspaces_input(
 /// stores it on `this.workspaces`.
 pub struct WorkspaceContext<'a> {
     npm: &'a mut (dyn Npm + 'a),
-    #[expect(dead_code, reason = "workspace-aware commands are not wired to arborist yet")]
+    #[expect(
+        dead_code,
+        reason = "workspace-aware commands are not wired to arborist yet"
+    )]
     workspaces: BTreeMap<String, String>,
 }
 
-#[expect(dead_code, reason = "workspace-aware commands are not wired to arborist yet")]
+#[expect(
+    dead_code,
+    reason = "workspace-aware commands are not wired to arborist yet"
+)]
 impl<'a> WorkspaceContext<'a> {
     pub fn new(npm: &'a mut (dyn Npm + 'a), workspaces: BTreeMap<String, String>) -> Self {
         Self { npm, workspaces }

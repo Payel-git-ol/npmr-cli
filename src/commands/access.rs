@@ -10,19 +10,18 @@ use crate::commands::command::{Command, CommandMeta};
 use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 
-pub static META: CommandMeta =
-    CommandMeta::new("access", "Set access level on published packages")
-        .with_params(&["json", "otp", "registry"])
-        .with_usage(&[
-            "list packages [<user>|<scope>|<scope:team>] [<package>]",
-            "list collaborators [<package> [<user>]]",
-            "get status [<package>]",
-            "set status=public|private [<package>]",
-            "set mfa=none|publish|automation [<package>]",
-            "grant <read-only|read-write> <scope:team> [<package>]",
-            "revoke <scope:team> [<package>]",
-        ])
-        .skip_validation();
+pub static META: CommandMeta = CommandMeta::new("access", "Set access level on published packages")
+    .with_params(&["json", "otp", "registry"])
+    .with_usage(&[
+        "list packages [<user>|<scope>|<scope:team>] [<package>]",
+        "list collaborators [<package> [<user>]]",
+        "get status [<package>]",
+        "set status=public|private [<package>]",
+        "set mfa=none|publish|automation [<package>]",
+        "grant <read-only|read-write> <scope:team> [<package>]",
+        "revoke <scope:team> [<package>]",
+    ])
+    .skip_validation();
 
 const COMMANDS: &[&str] = &["get", "grant", "list", "revoke", "set"];
 
@@ -63,7 +62,12 @@ impl Access {
         Err(registry_stub("listing packages"))
     }
 
-    fn list_collaborators(&self, npm: &dyn Npm, pkg: Option<&str>, user: Option<&str>) -> Result<()> {
+    fn list_collaborators(
+        &self,
+        npm: &dyn Npm,
+        pkg: Option<&str>,
+        user: Option<&str>,
+    ) -> Result<()> {
         let pkg_name = self.get_package(npm, pkg, false)?;
         let _ = (pkg_name, user);
         Err(registry_stub("listing collaborators"))
@@ -92,16 +96,21 @@ impl Access {
         }
     }
 
-    fn get_package(&self, npm: &dyn Npm, name: Option<&str>, require_scope: bool) -> Result<String> {
+    fn get_package(
+        &self,
+        npm: &dyn Npm,
+        name: Option<&str>,
+        require_scope: bool,
+    ) -> Result<String> {
         let name = match name {
             Some(name) if !name.is_empty() => name.to_string(),
             _ => {
                 let manifest = std::fs::read_to_string(npm.prefix().join("package.json")).ok();
                 let Some(manifest) = manifest else {
-                    return Err(NpmError::new(
-                        "no package name given and no package.json found",
-                    )
-                    .with_code("ENOENT"));
+                    return Err(
+                        NpmError::new("no package name given and no package.json found")
+                            .with_code("ENOENT"),
+                    );
                 };
                 let content: Value = serde_json::from_str(&manifest)?;
                 content
@@ -112,15 +121,16 @@ impl Access {
             }
         };
         if require_scope && !name.starts_with('@') {
-            return Err(META.usage_error(
-                "This command is only available for scoped packages.",
-            ));
+            return Err(META.usage_error("This command is only available for scoped packages."));
         }
         Ok(name)
     }
 
     /// Prints the `item: value` table, honouring `--json`.
-    #[expect(dead_code, reason = "used once access commands get wired to the registry")]
+    #[expect(
+        dead_code,
+        reason = "used once access commands get wired to the registry"
+    )]
     fn output(&self, npm: &dyn Npm, items: &BTreeMap<String, String>, limiter: Option<&str>) {
         let mut outputs = BTreeMap::new();
         for (item, value) in items {
@@ -178,9 +188,9 @@ impl Command for Access {
         match cmd {
             "grant" => {
                 if !matches!(subcmd, "read-only" | "read-write") {
-                    return Err(META.usage_error(
-                        "grant must be either `read-only` or `read-write`",
-                    ));
+                    return Err(
+                        META.usage_error("grant must be either `read-only` or `read-write`")
+                    );
                 }
                 let Some(scope) = arg(0) else {
                     return Err(META.usage_error("`<scope:team>` argument is required"));
@@ -191,23 +201,21 @@ impl Command for Access {
             "list" | "ls" => match subcmd {
                 "packages" => self.list_packages(&*npm, arg(0), arg(1)),
                 "collaborators" => self.list_collaborators(&*npm, arg(0), arg(1)),
-                _ => Err(META.usage_error(format!(
-                    "list {subcmd} is not a valid access command"
-                ))),
+                _ => Err(META.usage_error(format!("list {subcmd} is not a valid access command"))),
             },
             "get" => {
                 if subcmd != "status" {
-                    return Err(META.usage_error(format!(
-                        "get {subcmd} is not a valid access command"
-                    )));
+                    return Err(
+                        META.usage_error(format!("get {subcmd} is not a valid access command"))
+                    );
                 }
                 self.get_status(&*npm, arg(0))
             }
             "set" => {
                 if !SET_COMMANDS.contains(&subcmd) {
-                    return Err(META.usage_error(format!(
-                        "set {subcmd} is not a valid access command"
-                    )));
+                    return Err(
+                        META.usage_error(format!("set {subcmd} is not a valid access command"))
+                    );
                 }
                 self.set(&*npm, subcmd, arg(0))
             }

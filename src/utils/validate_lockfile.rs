@@ -23,16 +23,29 @@ impl LockedNode {
     pub fn from_package_json(location: &str, pkg: &Value) -> Self {
         Self {
             location: location.to_string(),
-            name: pkg.get("name").and_then(Value::as_str).unwrap_or_default().to_string(),
+            name: pkg
+                .get("name")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string(),
             version: pkg
                 .get("version")
                 .and_then(Value::as_str)
                 .unwrap_or_default()
                 .to_string(),
-            resolved: pkg.get("resolved").and_then(Value::as_str).map(str::to_string),
-            integrity: pkg.get("integrity").and_then(Value::as_str).map(str::to_string),
+            resolved: pkg
+                .get("resolved")
+                .and_then(Value::as_str)
+                .map(str::to_string),
+            integrity: pkg
+                .get("integrity")
+                .and_then(Value::as_str)
+                .map(str::to_string),
             dev: pkg.get("dev").and_then(Value::as_bool).unwrap_or(false),
-            optional: pkg.get("optional").and_then(Value::as_bool).unwrap_or(false),
+            optional: pkg
+                .get("optional")
+                .and_then(Value::as_bool)
+                .unwrap_or(false),
             link: pkg.get("link").and_then(Value::as_bool).unwrap_or(false),
         }
     }
@@ -48,7 +61,10 @@ pub fn lockfile_inventory(lock: &Value) -> BTreeMap<String, LockedNode> {
         if location.is_empty() {
             continue;
         }
-        inventory.insert(location.clone(), LockedNode::from_package_json(location, pkg));
+        inventory.insert(
+            location.clone(),
+            LockedNode::from_package_json(location, pkg),
+        );
     }
     inventory
 }
@@ -112,7 +128,9 @@ pub fn validate_lockfile(
 
 /// Verifies that the root `packageExtensions` still matches the lockfile.
 pub fn validate_package_extensions(lock: &Value, manifest: &Value) -> Vec<String> {
-    let locked = lock.get("packageExtensionsChecksum").and_then(Value::as_str);
+    let locked = lock
+        .get("packageExtensionsChecksum")
+        .and_then(Value::as_str);
     let current = manifest.get("packageExtensions");
     if current.is_none() || current == Some(&Value::Null) {
         return Vec::new();
@@ -132,9 +150,9 @@ pub fn validate_npm_extension(lock: &Value, file_hash: Option<&str>) -> Vec<Stri
         (Some(locked), Some(current)) if locked != current => vec![format!(
             "Invalid: .npm-extension in the working directory differs from the lock file (lockfile: {locked}, actual: {current})"
         )],
-        (Some(_), None) => vec![
-            "Invalid: lock file references a .npm-extension that does not exist".into(),
-        ],
+        (Some(_), None) => {
+            vec!["Invalid: lock file references a .npm-extension that does not exist".into()]
+        }
         _ => Vec::new(),
     }
 }
@@ -159,10 +177,19 @@ mod tests {
     #[test]
     fn reports_version_mismatch() {
         let mut locked = BTreeMap::new();
-        locked.insert("node_modules/a".into(), node("node_modules/a", "a", "1.0.0"));
+        locked.insert(
+            "node_modules/a".into(),
+            node("node_modules/a", "a", "1.0.0"),
+        );
         let mut ideal = BTreeMap::new();
-        ideal.insert("node_modules/a".into(), node("node_modules/a", "a", "1.0.1"));
+        ideal.insert(
+            "node_modules/a".into(),
+            node("node_modules/a", "a", "1.0.1"),
+        );
         let errors = validate_lockfile(&locked, &ideal);
-        assert_eq!(errors, vec!["Invalid: lock file's a@1.0.0 does not satisfy a@1.0.1"]);
+        assert_eq!(
+            errors,
+            vec!["Invalid: lock file's a@1.0.0 does not satisfy a@1.0.1"]
+        );
     }
 }

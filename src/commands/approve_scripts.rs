@@ -37,9 +37,7 @@ impl Command for ApproveScripts {
             npm,
             Mode::Approve,
             args,
-            ModeOptions {
-                pending_flag: true,
-            },
+            ModeOptions { pending_flag: true },
         )
     }
 }

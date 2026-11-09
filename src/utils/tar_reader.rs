@@ -81,7 +81,12 @@ pub fn entries(tarball: &[u8]) -> Result<Vec<Entry>> {
 
         // Skip links, directories and device nodes; keep regular files.
         if typeflag == b'0' || typeflag == 0 {
-            result.push(Entry { path: name, data, size: size as u64, mode });
+            result.push(Entry {
+                path: name,
+                data,
+                size: size as u64,
+                mode,
+            });
         }
     }
     Ok(result)
@@ -105,7 +110,12 @@ pub fn list_entries(tarball: &[u8]) -> Result<(Vec<TarFile>, usize, u64, Vec<Str
         });
     }
     let count = files.len();
-    Ok((super::tar::finish_files(files), count, total, bundled.into_iter().collect()))
+    Ok((
+        super::tar::finish_files(files),
+        count,
+        total,
+        bundled.into_iter().collect(),
+    ))
 }
 
 /// Reads one member of a (possibly gzipped) tarball.

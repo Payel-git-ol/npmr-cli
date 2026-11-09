@@ -20,7 +20,7 @@ fn npm_token() -> &'static Regex {
         Regex::new(r"\b(?:_authToken|npm_[A-Za-z0-9]{36}|//registry[^:\s]*:_authToken)\b[^ ]*")
             .expect("valid token regex")
     })
-    }
+}
 
 fn bearer() -> &'static Regex {
     BEARER.get_or_init(|| Regex::new(r"(?i)bearer\s+[A-Za-z0-9._~+/=-]+").expect("valid bearer"))

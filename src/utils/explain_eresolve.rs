@@ -3,7 +3,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::utils::explain_dep::{explain_edge, explain_node, print_node, ExplainEdge, ExplainNode};
+use crate::utils::explain_dep::{ExplainEdge, ExplainNode, explain_edge, explain_node, print_node};
 
 /// The explanation object Arborist attaches to an ERESOLVE error.
 #[derive(Debug, Clone, Default)]
@@ -50,7 +50,11 @@ pub fn explain(expl: &EresolveExplanation, color: bool, depth: i32) -> String {
                 .and_then(|pc| pc.current.as_ref())
                 .map(|current| explain_node(current, depth, color))
         })
-        .or_else(|| expl.current_edge.as_ref().map(|edge| edge_text(edge, depth, color)))
+        .or_else(|| {
+            expl.current_edge
+                .as_ref()
+                .map(|edge| edge_text(edge, depth, color))
+        })
         .or_else(|| expl.edge.as_ref().map(|edge| edge_text(edge, depth, color)));
     if let Some(found) = found {
         out.push(format!("Found: {found}"));

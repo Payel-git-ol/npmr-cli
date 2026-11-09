@@ -8,7 +8,11 @@ use crate::utils::log::warn;
 
 pub static META: CommandMeta = CommandMeta::new("owner", "Manage package owners")
     .with_params(&["registry", "otp", "workspace", "workspaces"])
-    .with_usage(&["add <user> <package-spec>", "rm <user> <package-spec>", "ls <package-spec>"])
+    .with_usage(&[
+        "add <user> <package-spec>",
+        "rm <user> <package-spec>",
+        "ls <package-spec>",
+    ])
     .workspaces();
 
 pub struct Owner;
@@ -58,8 +62,16 @@ impl Owner {
     fn dispatch(&self, npm: &mut (dyn Npm + '_), action: &str, rest: &[String]) -> Result<()> {
         match action {
             "ls" | "list" => self.ls(&*npm, rest.first().map(String::as_str)),
-            "add" => self.change_owners(&*npm, rest.first().map(String::as_str), rest.get(1).map(String::as_str)),
-            "rm" | "remove" => self.change_owners(&*npm, rest.first().map(String::as_str), rest.get(1).map(String::as_str)),
+            "add" => self.change_owners(
+                &*npm,
+                rest.first().map(String::as_str),
+                rest.get(1).map(String::as_str),
+            ),
+            "rm" | "remove" => self.change_owners(
+                &*npm,
+                rest.first().map(String::as_str),
+                rest.get(1).map(String::as_str),
+            ),
             _ => Err(META.usage_error("")),
         }
     }

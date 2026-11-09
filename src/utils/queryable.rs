@@ -265,7 +265,10 @@ fn walk<'a>(
     selectors: &[Selector],
     out: &mut Vec<&'a Node>,
 ) {
-    if selectors.iter().any(|s| step_match(parents, s, s.steps.len() - 1, node)) {
+    if selectors
+        .iter()
+        .any(|s| step_match(parents, s, s.steps.len() - 1, node))
+    {
         out.push(node);
     }
     parents.push(node);

@@ -8,10 +8,11 @@ use crate::utils::errors::{NpmError, Result};
 use crate::utils::key_values::log_stage_item;
 use crate::utils::validate_uuid::validate_uuid;
 
-pub static META: CommandMeta = CommandMeta::new("view", "View details of a specific staged package")
-    .with_usage(&["<stage-id>"])
-    .with_params(&["json", "registry"])
-    .with_positionals(1);
+pub static META: CommandMeta =
+    CommandMeta::new("view", "View details of a specific staged package")
+        .with_usage(&["<stage-id>"])
+        .with_params(&["json", "registry"])
+        .with_positionals(1);
 
 pub struct StageView;
 

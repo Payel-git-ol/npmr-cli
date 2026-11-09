@@ -117,10 +117,10 @@ impl Query {
         if expected.parse::<usize>().ok() == Some(actual) {
             return Ok(());
         }
-        Err(NpmError::new(format!(
-            "Expected {expected} results, but found {actual}"
-        ))
-        .with_code("EEXPECTRESULTS"))
+        Err(
+            NpmError::new(format!("Expected {expected} results, but found {actual}"))
+                .with_code("EEXPECTRESULTS"),
+        )
     }
 
     fn output(&self, npm: &dyn Npm) -> Result<()> {
@@ -143,13 +143,14 @@ impl Command for Query {
             .set(Value::Bool(true), "json", ConfigSource::Cli);
         let selector = args.first().map(String::as_str).unwrap_or("*");
         let dir = npm.dir();
-        let root = dir.parent().map(Path::to_path_buf).unwrap_or_else(|| npm.prefix());
-        if npm.store().get_bool("package-lock-only")
-            && !root.join("package-lock.json").is_file()
-        {
-            return Err(META.usage_error(
-                "A package-lock.json file is required in package-lock-only mode",
-            ));
+        let root = dir
+            .parent()
+            .map(Path::to_path_buf)
+            .unwrap_or_else(|| npm.prefix());
+        if npm.store().get_bool("package-lock-only") && !root.join("package-lock.json").is_file() {
+            return Err(
+                META.usage_error("A package-lock.json file is required in package-lock-only mode")
+            );
         }
         self.run_query(&root, selector)?;
         self.output(npm)

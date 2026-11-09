@@ -44,7 +44,10 @@ pub fn did_you_mean(pkg: Option<&serde_json::Value>, scmd: &str) -> String {
     if let Some(scripts) = scripts {
         for name in scripts.keys() {
             if is_close(scmd, name) && !RUN_SCRIPTS.contains(&name.as_str()) {
-                best.push((format!("run {name}"), format!("run the \"{name}\" package script")));
+                best.push((
+                    format!("run {name}"),
+                    format!("run the \"{name}\" package script"),
+                ));
             }
         }
     }
@@ -63,7 +66,11 @@ pub fn did_you_mean(pkg: Option<&serde_json::Value>, scmd: &str) -> String {
         return String::new();
     }
 
-    let which = if best.len() == 1 { "this" } else { "one of these" };
+    let which = if best.len() == 1 {
+        "this"
+    } else {
+        "one of these"
+    };
     let listing = best
         .iter()
         .take(3)

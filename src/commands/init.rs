@@ -84,18 +84,31 @@ fn guess_name(prefix: &Path) -> String {
     } else {
         prefix.file_name().or_else(|| dir.file_name())
     };
-    let raw = name.map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let raw = name
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
     let sanitized: String = raw
         .to_lowercase()
         .chars()
-        .map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.' { c } else { '-' })
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.' {
+                c
+            } else {
+                '-'
+            }
+        })
         .collect();
     let trimmed = sanitized.trim_start_matches(['-', '.', '_']).to_string();
-    if trimmed.is_empty() { "app".into() } else { trimmed }
+    if trimmed.is_empty() {
+        "app".into()
+    } else {
+        trimmed
+    }
 }
 
 fn prompt(label: &str, default: &str) -> String {
-    let value = crate::utils::read_user_info::read(&format!("{label}: ({default}) ")).unwrap_or_default();
+    let value =
+        crate::utils::read_user_info::read(&format!("{label}: ({default}) ")).unwrap_or_default();
     if value.trim().is_empty() {
         default.to_string()
     } else {
@@ -104,10 +117,15 @@ fn prompt(label: &str, default: &str) -> String {
 }
 
 fn prompt_optional(label: &str, default: &str) -> Option<String> {
-    let value = crate::utils::read_user_info::read(&format!("{label}: ({default}) ")).unwrap_or_default();
+    let value =
+        crate::utils::read_user_info::read(&format!("{label}: ({default}) ")).unwrap_or_default();
     let value = value.trim();
-    Some(if value.is_empty() { default.to_string() } else { value.to_string() })
-        .filter(|v| !v.is_empty())
+    Some(if value.is_empty() {
+        default.to_string()
+    } else {
+        value.to_string()
+    })
+    .filter(|v| !v.is_empty())
 }
 
 impl Command for Init {
@@ -140,7 +158,10 @@ impl Command for Init {
         }
         let prefix = npm.local_prefix().to_path_buf();
         if !prefix.join("package.json").is_file() {
-            warn("init", &[&"Missing package.json. Try with `--include-workspace-root`."]);
+            warn(
+                "init",
+                &[&"Missing package.json. Try with `--include-workspace-root`."],
+            );
         }
 
         let filters = npm.store().get_list("workspace");
@@ -174,7 +195,7 @@ impl Command for Init {
 }
 
 impl Init {
-    fn template(&mut self, npm: &mut (dyn Npm + '_) ) -> Result<()> {
+    fn template(&mut self, npm: &mut (dyn Npm + '_)) -> Result<()> {
         let cwd = std::env::current_dir().map_err(NpmError::from)?;
         self.template_at(npm, &cwd)
     }
@@ -216,7 +237,16 @@ impl Init {
         let default_main = "index.js".to_string();
 
         let (name, version, description, main, kind, author, license, private) = if yes {
-            (default_name, default_version, String::new(), default_main, default_type, default_author, default_license, npm.store().get_bool("init-private"))
+            (
+                default_name,
+                default_version,
+                String::new(),
+                default_main,
+                default_type,
+                default_author,
+                default_license,
+                npm.store().get_bool("init-private"),
+            )
         } else {
             let name = prompt("package name", &default_name);
             let version = prompt("version", &default_version);
@@ -228,7 +258,16 @@ impl Init {
             let private_answer = crate::utils::read_user_info::read("private: (false) ")
                 .unwrap_or_default()
                 .to_lowercase();
-            (name, version, description, main, kind, author, license, private_answer == "true" || private_answer == "y" || private_answer == "yes")
+            (
+                name,
+                version,
+                description,
+                main,
+                kind,
+                author,
+                license,
+                private_answer == "true" || private_answer == "y" || private_answer == "yes",
+            )
         };
 
         let mut data = Map::new();
@@ -258,7 +297,10 @@ impl Init {
         let body = serde_json::to_string_pretty(&Value::Object(data)).unwrap_or_default();
         if !yes {
             crate::output::set_meta(false);
-            crate::output::standard(format!("About to write to {}\n\n{body}", path.join("package.json").display()));
+            crate::output::standard(format!(
+                "About to write to {}\n\n{body}",
+                path.join("package.json").display()
+            ));
         }
         std::fs::write(path.join("package.json"), format!("{body}\n"))?;
         Ok(())

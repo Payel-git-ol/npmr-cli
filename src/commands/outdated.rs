@@ -8,7 +8,7 @@ use serde_json::{Map, Value};
 
 use crate::commands::command::{Command, CommandMeta};
 use crate::npm::Npm;
-use crate::utils::display::{paint, Color};
+use crate::utils::display::{Color, paint};
 use crate::utils::errors::{NpmError, Result};
 
 pub static META: CommandMeta = CommandMeta::new("outdated", "Check for outdated packages")
@@ -45,7 +45,11 @@ pub struct OutdatedRow {
 impl OutdatedRow {
     /// Sorts rows alphabetically by name, then by dependent.
     pub fn sort(rows: &mut [OutdatedRow]) {
-        rows.sort_by(|a, b| a.name.cmp(&b.name).then_with(|| a.dependent.cmp(&b.dependent)));
+        rows.sort_by(|a, b| {
+            a.name
+                .cmp(&b.name)
+                .then_with(|| a.dependent.cmp(&b.dependent))
+        });
     }
 
     fn type_label(&self) -> &'static str {
@@ -166,7 +170,11 @@ pub fn pretty(rows: &[OutdatedRow], long: bool, color: bool) -> String {
         ];
         if long {
             line.push(row.type_label().to_string());
-            line.push(paint(row.homepage.as_deref().unwrap_or(""), Color::Blue, color));
+            line.push(paint(
+                row.homepage.as_deref().unwrap_or(""),
+                Color::Blue,
+                color,
+            ));
             line.push(row.depended_by_location.clone());
         }
         table.push(line);

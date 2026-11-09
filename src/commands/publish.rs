@@ -7,9 +7,9 @@ use crate::commands::parse_flags;
 use crate::npm::Npm;
 use crate::store::ConfigSource;
 use crate::utils::errors::{NpmError, Result};
-use crate::utils::log::{notice, warn, verbose};
-use crate::utils::tar::{get_contents, log_tar};
+use crate::utils::log::{notice, verbose, warn};
 use crate::utils::set_workspaces::set_workspaces;
+use crate::utils::tar::{get_contents, log_tar};
 
 pub static PUBLISH_PARAMS: &[&str] = &[
     "tag",
@@ -41,11 +41,7 @@ impl Publish {
     }
 
     fn command_name(&self) -> &'static str {
-        if self.stage {
-            "stage"
-        } else {
-            "publish"
-        }
+        if self.stage { "stage" } else { "publish" }
     }
 }
 
@@ -86,12 +82,7 @@ impl Command for Publish {
                 }
                 warn(
                     self.command_name(),
-                    &[
-                        &"Skipping workspace ",
-                        &name,
-                        &", marked as ",
-                        &"private",
-                    ],
+                    &[&"Skipping workspace ", &name, &", marked as ", &"private"],
                 );
             }
         }
@@ -134,7 +125,10 @@ fn publish_one(
 
     if !npm.store().get_bool("force") {
         let is_default_tag = npm.store().is_default("tag")
-            && manifest.get("publishConfig").and_then(|p| p.get("tag")).is_none();
+            && manifest
+                .get("publishConfig")
+                .and_then(|p| p.get("tag"))
+                .is_none();
         let is_prerelease = semver::Version::parse(version)
             .map(|v| !v.pre.is_empty())
             .unwrap_or(false);
@@ -156,7 +150,10 @@ fn publish_one(
     if !has_creds {
         let msg = format!("This command requires you to be logged in to {registry}");
         if dry_run {
-            warn(if is_stage { "stage" } else { "publish" }, &[&format!("{msg} (dry-run)")]);
+            warn(
+                if is_stage { "stage" } else { "publish" },
+                &[&format!("{msg} (dry-run)")],
+            );
         } else {
             return Err(NpmError::new(msg).with_code("ENEEDAUTH"));
         }
@@ -180,9 +177,19 @@ fn publish_one(
     let contents = get_contents(&manifest, &tarball)?;
 
     if json {
-        log_tar(&contents, npm.store().get_bool("unicode"), true, &contents.name);
+        log_tar(
+            &contents,
+            npm.store().get_bool("unicode"),
+            true,
+            &contents.name,
+        );
     } else {
-        log_tar(&contents, npm.store().get_bool("unicode"), false, &contents.name);
+        log_tar(
+            &contents,
+            npm.store().get_bool("unicode"),
+            false,
+            &contents.name,
+        );
     }
 
     if !dry_run {

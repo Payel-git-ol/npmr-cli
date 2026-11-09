@@ -10,12 +10,7 @@ use crate::utils::display::{Color, paint};
 use crate::utils::errors::{NpmError, Result};
 
 pub static META: CommandMeta = CommandMeta::new("view", "View registry info")
-    .with_params(&[
-        "json",
-        "workspace",
-        "workspaces",
-        "include-workspace-root",
-    ])
+    .with_params(&["json", "workspace", "workspaces", "include-workspace-root"])
     .with_usage(&["[<package-spec>] [<field>[.subfield]...]"])
     .workspaces();
 
@@ -47,7 +42,7 @@ fn unparse_person(d: &Value) -> String {
     }
     out
 }
-#[expect(dead_code, reason = "used once field projection output is rendered")]
+#[cfg(test)]
 fn cleanup(data: &Value) -> Value {
     match data {
         Value::Array(items) => Value::Array(items.iter().map(cleanup).collect()),
@@ -95,7 +90,9 @@ fn dist_tags(packu: &Map<String, Value>) -> Vec<(String, String)> {
         })
         .collect();
     tags.sort_by(|(a_tag, a_ver), (b_tag, b_ver)| {
-        published(a_tag, a_ver).cmp(&published(b_tag, b_ver)).then(b_tag.cmp(a_tag))
+        published(a_tag, a_ver)
+            .cmp(&published(b_tag, b_ver))
+            .then(b_tag.cmp(a_tag))
     });
     tags.reverse();
     tags
@@ -132,7 +129,11 @@ fn relative_date(iso: &str) -> String {
 }
 
 /// Renders the human-readable whole-packument view.
-pub fn pretty_view(packu: &Map<String, Value>, manifest: &Map<String, Value>, color: bool) -> String {
+pub fn pretty_view(
+    packu: &Map<String, Value>,
+    manifest: &Map<String, Value>,
+    color: bool,
+) -> String {
     let text = |key: &str| manifest.get(key).and_then(Value::as_str);
     let deps: Vec<String> = manifest
         .get("dependencies")
@@ -146,7 +147,10 @@ pub fn pretty_view(packu: &Map<String, Value>, manifest: &Map<String, Value>, co
     let tags = dist_tags(packu);
     let site = manifest.get("homepage").map(|homepage| match homepage {
         Value::Object(map) => map.get("url").map(Value::to_string).unwrap_or_default(),
-        other => other.as_str().map(str::to_string).unwrap_or(other.to_string()),
+        other => other
+            .as_str()
+            .map(str::to_string)
+            .unwrap_or(other.to_string()),
     });
     let bins: Vec<&str> = manifest
         .get("bin")
@@ -186,7 +190,10 @@ pub fn pretty_view(packu: &Map<String, Value>, manifest: &Map<String, Value>, co
                     paint(&deps.len().to_string(), Color::Cyan, color)
                 }
             ),
-            format!("versions: {}", paint(&version_count.to_string(), Color::Cyan, color)),
+            format!(
+                "versions: {}",
+                paint(&version_count.to_string(), Color::Cyan, color)
+            ),
         ]
         .join(" | "),
     );
@@ -214,7 +221,10 @@ pub fn pretty_view(packu: &Map<String, Value>, manifest: &Map<String, Value>, co
         }
     }
     if !bins.is_empty() {
-        res.push(format!("\nbin: {}", paint(&bins.join(", "), Color::Cyan, color)));
+        res.push(format!(
+            "\nbin: {}",
+            paint(&bins.join(", "), Color::Cyan, color)
+        ));
     }
     let dist = manifest.get("dist").and_then(Value::as_object);
     if let Some(dist) = dist {
@@ -237,7 +247,11 @@ pub fn pretty_view(packu: &Map<String, Value>, manifest: &Map<String, Value>, co
         if let Some(size) = dist.get("unpackedSize").and_then(Value::as_u64) {
             res.push(format!(
                 ".unpackedSize: {}",
-                paint(&crate::utils::format_bytes::format_bytes(size), Color::Blue, color)
+                paint(
+                    &crate::utils::format_bytes::format_bytes(size),
+                    Color::Blue,
+                    color
+                )
             ));
         }
     }
@@ -276,7 +290,10 @@ pub fn pretty_view(packu: &Map<String, Value>, manifest: &Map<String, Value>, co
     if publisher.is_some() || packu.get("time").is_some() {
         let mut info = "published".to_string();
         if let Some(time) = publish_time {
-            info.push_str(&format!(" {}", paint(&relative_date(time), Color::Cyan, color)));
+            info.push_str(&format!(
+                " {}",
+                paint(&relative_date(time), Color::Cyan, color)
+            ));
         }
         if let Some(publisher) = publisher {
             info.push_str(&format!(" by {publisher}"));
@@ -324,8 +341,7 @@ impl Default for View {
 fn read_json(path: &std::path::Path) -> Result<Value> {
     let text = std::fs::read_to_string(path)
         .map_err(|err| NpmError::new(format!("{}: {err}", path.display())))?;
-    serde_json::from_str(&text)
-        .map_err(|err| NpmError::new(format!("{}: {err}", path.display())))
+    serde_json::from_str(&text).map_err(|err| NpmError::new(format!("{}: {err}", path.display())))
 }
 
 impl Command for View {
@@ -372,7 +388,11 @@ mod tests {
     fn defaults_to_local_dot() {
         assert_eq!(
             parse_args(&args(&[])),
-            ViewArgs { pkg: ".".into(), local: true, rest: vec![] }
+            ViewArgs {
+                pkg: ".".into(),
+                local: true,
+                rest: vec![]
+            }
         );
     }
 

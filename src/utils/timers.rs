@@ -1,7 +1,7 @@
 //! Port of `lib/utils/timers.js`: records named timing spans and writes a
 //! `<logpath>timing.json` file when `--timing` is enabled.
 
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use std::collections::BTreeMap;
 use std::time::Instant;
 
@@ -82,7 +82,10 @@ impl Timers {
         data.insert("command".into(), json!(command));
         data.insert("logfiles".into(), json!(logfiles));
         data.insert("version".into(), json!(version));
-        data.insert("elapsed".into(), json!(self.started.elapsed().as_millis() as u64));
+        data.insert(
+            "elapsed".into(),
+            json!(self.started.elapsed().as_millis() as u64),
+        );
         data.insert(
             "timers".into(),
             Value::Array(

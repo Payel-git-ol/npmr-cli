@@ -100,7 +100,10 @@ impl Command for Install {
     fn exec(&mut self, npm: &mut (dyn Npm + '_), args: &[String]) -> Result<()> {
         let is_global = npm.global();
         let where_ = if is_global {
-            npm.global_dir().parent().map(Path::to_path_buf).unwrap_or_else(|| npm.prefix())
+            npm.global_dir()
+                .parent()
+                .map(Path::to_path_buf)
+                .unwrap_or_else(|| npm.prefix())
         } else {
             npm.prefix()
         };
@@ -111,7 +114,9 @@ impl Command for Install {
         if is_global && args.iter().any(|a| a == "npm" || a.starts_with("npm@")) {
             crate::utils::log::warn(
                 "install",
-                &[&"Global installs of npm are not supported yet; the requested version was not verified."],
+                &[
+                    &"Global installs of npm are not supported yet; the requested version was not verified.",
+                ],
             );
         }
 
@@ -158,7 +163,8 @@ impl ArboristCommand for Install {
 
 /// Shared by `ci`, whose argument handling is stricter.
 pub fn global_error(command: &str) -> NpmError {
-    NpmError::new(format!("`npm {command}` does not work for global packages")).with_code("ECIGLOBAL")
+    NpmError::new(format!("`npm {command}` does not work for global packages"))
+        .with_code("ECIGLOBAL")
 }
 
 /// Whether `--audit` was explicitly requested.

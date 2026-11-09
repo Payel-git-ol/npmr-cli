@@ -51,7 +51,9 @@ impl Command for InstallScripts {
             "deny" => Mode::Deny,
             "ls" | "list" => Mode::List,
             "prune" => Mode::Prune,
-            other => return Err(META.usage_error(format!("`{other}` is not a recognized subcommand."))),
+            other => {
+                return Err(META.usage_error(format!("`{other}` is not a recognized subcommand.")));
+            }
         };
         run_mode(
             &META,

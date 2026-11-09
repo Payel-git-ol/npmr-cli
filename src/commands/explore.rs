@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 
 use crate::commands::command::{Command, CommandMeta};
-use crate::commands::run::{run_shell, RunScript};
+use crate::commands::run::{RunScript, run_shell};
 use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 

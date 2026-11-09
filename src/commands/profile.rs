@@ -5,18 +5,16 @@ use crate::commands::command::{Command, CommandMeta};
 use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 
-pub static META: CommandMeta = CommandMeta::new(
-    "profile",
-    "Change settings on your registry profile",
-)
-.with_params(&["registry", "json", "parseable", "otp"])
-.with_usage(&[
-    "enable-2fa [auth-only|auth-and-writes]",
-    "disable-2fa",
-    "get [<key>]",
-    "set <key> <value>",
-])
-.skip_validation();
+pub static META: CommandMeta =
+    CommandMeta::new("profile", "Change settings on your registry profile")
+        .with_params(&["registry", "json", "parseable", "otp"])
+        .with_usage(&[
+            "enable-2fa [auth-only|auth-and-writes]",
+            "disable-2fa",
+            "get [<key>]",
+            "set <key> <value>",
+        ])
+        .skip_validation();
 
 pub struct Profile;
 
@@ -27,9 +25,14 @@ impl Profile {
 
     fn enable_2fa(&self, args: &[String]) -> Result<()> {
         if args.len() > 1 {
-            return Err(NpmError::new("npm profile enable-2fa [auth-and-writes|auth-only]"));
+            return Err(NpmError::new(
+                "npm profile enable-2fa [auth-and-writes|auth-only]",
+            ));
         }
-        let mode = args.first().map(String::as_str).unwrap_or("auth-and-writes");
+        let mode = args
+            .first()
+            .map(String::as_str)
+            .unwrap_or("auth-and-writes");
         if mode != "auth-only" && mode != "auth-and-writes" {
             return Err(NpmError::new(format!(
                 "Invalid two-factor authentication mode \"{mode}\".\n\

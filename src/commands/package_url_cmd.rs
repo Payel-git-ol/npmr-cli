@@ -36,10 +36,7 @@ pub trait PackageUrlCommand: Command {
             let mani = self.manifest(npm, arg)?;
             let url = self.get_url(arg, &mani)?;
             crate::utils::log::silly(self.meta().name, &[&"url", &url]);
-            let name = mani
-                .get("name")
-                .and_then(Value::as_str)
-                .unwrap_or(arg);
+            let name = mani.get("name").and_then(Value::as_str).unwrap_or(arg);
             let title = format!("{name} {} available at the following URL", self.meta().name);
             crate::utils::open_url::open_url(npm, &url, &title, false)?;
         }
@@ -72,7 +69,10 @@ pub fn hosted_url(mani: &Value, kind: HostedKind) -> Option<String> {
     let rurl = rurl.trim_start_matches("git+");
     let parsed = url::Url::parse(rurl).ok()?;
     let host = parsed.host_str()?;
-    let path = parsed.path().trim_start_matches('/').trim_end_matches(".git");
+    let path = parsed
+        .path()
+        .trim_start_matches('/')
+        .trim_end_matches(".git");
     let mut parts = path.split('/');
     let user = parts.next()?;
     let project = path.split('/').nth(1).unwrap_or("");
@@ -94,7 +94,10 @@ pub fn hosted_url(mani: &Value, kind: HostedKind) -> Option<String> {
 }
 
 #[derive(Debug, Clone, Copy)]
-#[expect(dead_code, reason = "the raw https kind is not produced by the spec classifier")]
+#[expect(
+    dead_code,
+    reason = "the raw https kind is not produced by the spec classifier"
+)]
 pub enum HostedKind {
     Bugs,
     Docs,

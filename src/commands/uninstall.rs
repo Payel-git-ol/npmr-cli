@@ -56,7 +56,10 @@ impl Command for Uninstall {
         }
 
         let where_ = if npm.global() {
-            npm.global_dir().parent().map(Path::to_path_buf).unwrap_or_else(|| npm.prefix())
+            npm.global_dir()
+                .parent()
+                .map(Path::to_path_buf)
+                .unwrap_or_else(|| npm.prefix())
         } else {
             npm.local_prefix().to_path_buf()
         };

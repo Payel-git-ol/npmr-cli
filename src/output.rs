@@ -2,8 +2,8 @@
 //! npm wraps around it (`standard`, `error`, flush on exit).
 
 use std::io::Write;
-use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 
 static META_FLAG: AtomicBool = AtomicBool::new(false);
 static PENDING_LINES: Mutex<Vec<String>> = Mutex::new(Vec::new());

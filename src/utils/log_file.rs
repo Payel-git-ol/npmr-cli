@@ -169,10 +169,7 @@ impl LogFiles {
                 })
             }
             Err(e) => {
-                crate::utils::log::verbose(
-                    "logfile",
-                    &[&format!("could not be created: {e}")],
-                );
+                crate::utils::log::verbose("logfile", &[&format!("could not be created: {e}")]);
                 None
             }
         }

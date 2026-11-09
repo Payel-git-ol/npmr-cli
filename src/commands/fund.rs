@@ -46,8 +46,10 @@ impl Command for Fund {
             }
         };
         if npm.global() {
-            return Err(NpmError::new("`npm Fund [<package-spec>]` does not support global packages")
-                .with_code("EFUNDGLOBAL"));
+            return Err(NpmError::new(
+                "`npm Fund [<package-spec>]` does not support global packages",
+            )
+            .with_code("EFUNDGLOBAL"));
         }
         let _ = funding_source_number;
         let spec = args.first().cloned().unwrap_or_default();

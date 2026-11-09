@@ -8,9 +8,7 @@ use serde_json::{Map, Value, json};
 
 use crate::commands::CommandMeta;
 use crate::npm::Npm;
-use crate::utils::allow_scripts_writer::{
-    ScriptNode, install_scripts, scan_nodes,
-};
+use crate::utils::allow_scripts_writer::{ScriptNode, install_scripts, scan_nodes};
 use crate::utils::errors::{NpmError, Result};
 use crate::utils::log::warn;
 use crate::utils::resolve_allow_scripts::resolve_allow_scripts;
@@ -63,7 +61,10 @@ fn version_satisfies(version: &str, range: &str) -> bool {
         .unwrap_or(false)
 }
 
-fn find_nodes_for_args<'a>(args: &[String], nodes: &'a [ScriptNode]) -> (Vec<&'a ScriptNode>, Vec<String>) {
+fn find_nodes_for_args<'a>(
+    args: &[String],
+    nodes: &'a [ScriptNode],
+) -> (Vec<&'a ScriptNode>, Vec<String>) {
     let mut matched: Vec<&ScriptNode> = Vec::new();
     let mut unmatched = Vec::new();
     for arg in args {
@@ -147,8 +148,15 @@ fn save_allow_scripts(prefix: &Path, policy: &Map<String, Value>) -> Result<()> 
     } else {
         obj.insert("allowScripts".into(), Value::Object(policy.clone()));
     }
-    std::fs::write(&path, format!("{}\n", serde_json::to_string_pretty(&manifest).unwrap_or_default()))?;
-    Ok(())}
+    std::fs::write(
+        &path,
+        format!(
+            "{}\n",
+            serde_json::to_string_pretty(&manifest).unwrap_or_default()
+        ),
+    )?;
+    Ok(())
+}
 
 /// Runs one of the allowlist modes. `meta` is used for usage errors.
 pub fn run_mode(
@@ -213,8 +221,10 @@ pub fn run_mode(
         npm.store().get_bool("ignore-scripts"),
         true,
     );
-    let entries: Vec<(&ScriptNode, Vec<(String, String)>)> =
-        unreviewed.iter().map(|e| (e.node, e.scripts.clone())).collect();
+    let entries: Vec<(&ScriptNode, Vec<(String, String)>)> = unreviewed
+        .iter()
+        .map(|e| (e.node, e.scripts.clone()))
+        .collect();
 
     if list {
         print_pending(npm, &entries);
@@ -245,11 +255,10 @@ pub fn run_mode(
         .with_code("ENOMATCH"));
     }
     if matched.is_empty() {
-        return Err(NpmError::new(format!(
-            "No installed packages match: {}",
-            args.join(", ")
-        ))
-        .with_code("ENOMATCH"));
+        return Err(
+            NpmError::new(format!("No installed packages match: {}", args.join(", ")))
+                .with_code("ENOMATCH"),
+        );
     }
     let groups = group_by_package(&matched);
     write_policy_changes(npm, mode, &prefix, &groups)
@@ -258,9 +267,7 @@ pub fn run_mode(
 fn print_pending(npm: &dyn Npm, entries: &[(&ScriptNode, Vec<(String, String)>)]) {
     if npm.json() {
         crate::output::set_meta(true);
-        crate::output::standard(
-            json!({ "allowScripts": pending_summary(entries) }).to_string(),
-        );
+        crate::output::standard(json!({ "allowScripts": pending_summary(entries) }).to_string());
         crate::output::flush();
         return;
     }
@@ -356,13 +363,22 @@ fn print_summary(npm: &dyn Npm, mode: Mode, summary: &[(String, Vec<Value>)]) {
         touched += 1;
         crate::output::standard(format!("{verb} {name}:"));
         for change in changes {
-            let key = change.get("key").and_then(Value::as_str).unwrap_or_default();
-            let what = change.get("change").and_then(Value::as_str).unwrap_or_default();
+            let key = change
+                .get("key")
+                .and_then(Value::as_str)
+                .unwrap_or_default();
+            let what = change
+                .get("change")
+                .and_then(Value::as_str)
+                .unwrap_or_default();
             crate::output::standard(format!("  {what} {key}"));
         }
     }
     if touched == 0 {
-        crate::output::standard(format!("Nothing to {}; allowScripts unchanged.", mode.verb()));
+        crate::output::standard(format!(
+            "Nothing to {}; allowScripts unchanged.",
+            mode.verb()
+        ));
     }
 }
 
@@ -381,8 +397,7 @@ fn run_prune(meta: &CommandMeta, npm: &mut (dyn Npm + '_), args: &[String]) -> R
     if !existing.is_empty() {
         let nodes = scan_nodes(&prefix);
         let refs: Vec<&ScriptNode> = nodes.iter().collect();
-        let (remaining, unused) =
-            crate::utils::allow_scripts_prune::classify(&existing, &refs);
+        let (remaining, unused) = crate::utils::allow_scripts_prune::classify(&existing, &refs);
         removed = unused;
         if !removed.is_empty() && !dry_run {
             save_allow_scripts(&prefix, &remaining)?;
@@ -409,7 +424,11 @@ fn run_prune(meta: &CommandMeta, npm: &mut (dyn Npm + '_), args: &[String]) -> R
         "{} {} unused allowScripts {}:",
         if dry_run { "Would remove" } else { "Removed" },
         removed.len(),
-        if removed.len() == 1 { "entry" } else { "entries" },
+        if removed.len() == 1 {
+            "entry"
+        } else {
+            "entries"
+        },
     ));
     for entry in &removed {
         let text = if entry.reason == "not-installed" {

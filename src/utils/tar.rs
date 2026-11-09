@@ -194,8 +194,17 @@ pub fn log_tar(contents: &TarContents, unicode: bool, json: bool, key: &str) {
     notice("Tarball Details", &[&""]);
     notice("", &[&format!("name: {}", contents.name)]);
     notice("", &[&format!("version: {}", contents.version)]);
-    notice("", &[&format!("package size: {}", format_bytes(contents.size))]);
-    notice("", &[&format!("unpacked size: {}", format_bytes(contents.unpacked_size))]);
+    notice(
+        "",
+        &[&format!("package size: {}", format_bytes(contents.size))],
+    );
+    notice(
+        "",
+        &[&format!(
+            "unpacked size: {}",
+            format_bytes(contents.unpacked_size)
+        )],
+    );
     notice("", &[&format!("shasum: {}", contents.shasum)]);
     let integrity = &contents.integrity;
     let short = if integrity.len() > 80 {
@@ -208,7 +217,10 @@ pub fn log_tar(contents: &TarContents, unicode: bool, json: bool, key: &str) {
         notice("", &[&format!("bundled deps: {}", contents.bundled.len())]);
         notice(
             "",
-            &[&format!("bundled files: {}", contents.entry_count - contents.files.len())],
+            &[&format!(
+                "bundled files: {}",
+                contents.entry_count - contents.files.len()
+            )],
         );
         notice("", &[&format!("own files: {}", contents.files.len())]);
     }
@@ -239,8 +251,9 @@ pub fn tar_to_json(contents: &TarContents) -> Value {
 /// Extracts `package/package.json` from a gzipped tarball.
 pub fn read_manifest(tarball: &[u8]) -> crate::utils::errors::Result<Value> {
     let content = tar_reader::read_file(tarball, "package/package.json")?;
-    serde_json::from_slice(&content)
-        .map_err(|_| crate::utils::errors::NpmError::new("Could not read package.json from tarball"))
+    serde_json::from_slice(&content).map_err(|_| {
+        crate::utils::errors::NpmError::new("Could not read package.json from tarball")
+    })
 }
 
 pub(crate) fn collect_bundled(path: &str, bundled: &mut BTreeSet<String>) {

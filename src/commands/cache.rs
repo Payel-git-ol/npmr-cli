@@ -65,8 +65,10 @@ impl Cache {
             silly("cache add", &[&"spec", spec]);
         }
         let _ = npm;
-        Err(NpmError::new("Fetching packages into the cache is not implemented yet")
-            .with_code("ENOTSUP"))
+        Err(
+            NpmError::new("Fetching packages into the cache is not implemented yet")
+                .with_code("ENOTSUP"),
+        )
     }
 
     fn verify(&self, npm: &dyn Npm) -> Result<()> {
@@ -102,7 +104,11 @@ impl Cache {
     fn ls(&self, npm: &dyn Npm, specs: &[String]) -> Result<()> {
         let cache = npm.store().cache();
         let mut keys = Vec::new();
-        for entry in std::fs::read_dir(cache.join("_cacache").join("index-v5")).into_iter().flatten().flatten() {
+        for entry in std::fs::read_dir(cache.join("_cacache").join("index-v5"))
+            .into_iter()
+            .flatten()
+            .flatten()
+        {
             keys.push(entry.file_name().to_string_lossy().into_owned());
         }
         keys.sort();
@@ -112,8 +118,10 @@ impl Cache {
             }
             return Ok(());
         }
-        Err(NpmError::new("Searching cache keys by package spec is not ported yet")
-            .with_code("ENOTSUP"))
+        Err(
+            NpmError::new("Searching cache keys by package spec is not ported yet")
+                .with_code("ENOTSUP"),
+        )
     }
 
     fn npx_entries(&self, npm: &dyn Npm, keys: &[String]) -> Result<Vec<(String, PathBuf, bool)>> {
@@ -137,7 +145,10 @@ impl Cache {
         }
         let mut picked = Vec::new();
         for key in keys {
-            match all.iter().find(|(hash, _, _)| hash == key || hash.starts_with(key.as_str())) {
+            match all
+                .iter()
+                .find(|(hash, _, _)| hash == key || hash.starts_with(key.as_str()))
+            {
                 Some(found) => picked.push(found.clone()),
                 None => {
                     return Err(META.usage_error(format!("Invalid npx key {key}")));
@@ -180,9 +191,7 @@ impl Cache {
         let dry_run = npm.store().get_bool("dry-run");
         if keys.is_empty() {
             if !npm.store().get_bool("force") {
-                return Err(META.usage_error(
-                    "Please use --force to remove entire npx cache",
-                ));
+                return Err(META.usage_error("Please use --force to remove entire npx cache"));
             }
             if !dry_run {
                 let _ = std::fs::remove_dir_all(Self::npx_cache_dir(npm));
@@ -202,12 +211,22 @@ impl Cache {
         if keys.is_empty() {
             return Err(META.usage_error(""));
         }
-        let blue = |s: &str| crate::utils::display::paint(s, crate::utils::display::Color::Blue, npm.color());
+        let blue = |s: &str| {
+            crate::utils::display::paint(s, crate::utils::display::Color::Blue, npm.color())
+        };
         for (hash, path, valid) in self.npx_entries(npm, keys)? {
             let v = if valid {
-                crate::utils::display::paint("valid", crate::utils::display::Color::Green, npm.color())
+                crate::utils::display::paint(
+                    "valid",
+                    crate::utils::display::Color::Green,
+                    npm.color(),
+                )
             } else {
-                crate::utils::display::paint("invalid", crate::utils::display::Color::Red, npm.color())
+                crate::utils::display::paint(
+                    "invalid",
+                    crate::utils::display::Color::Red,
+                    npm.color(),
+                )
             };
             crate::output::standard(format!("{v} npx cache entry with key {}", blue(&hash)));
             crate::output::standard(format!("location: {}", blue(&path.display().to_string())));

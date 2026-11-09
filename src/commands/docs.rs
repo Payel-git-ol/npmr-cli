@@ -1,15 +1,15 @@
 //! Port of `lib/commands/docs.js`.
 
 use crate::commands::command::{Command, CommandMeta};
-use crate::commands::package_url_cmd::{HostedKind, PackageUrlCommand, hosted_url, package_url_meta};
+use crate::commands::package_url_cmd::{
+    HostedKind, PackageUrlCommand, hosted_url, package_url_meta,
+};
 use crate::npm::Npm;
 use crate::utils::errors::Result;
 use serde_json::Value;
 
-pub static META: CommandMeta = package_url_meta(
-    "docs",
-    "Open documentation for a package in a web browser",
-);
+pub static META: CommandMeta =
+    package_url_meta("docs", "Open documentation for a package in a web browser");
 
 pub struct Docs;
 

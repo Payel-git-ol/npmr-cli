@@ -70,7 +70,9 @@ fn validate_policy(policy: Option<Policy>, source_label: &str) -> Option<Policy>
         let Some(parsed) = parse_key(&key) else {
             warn(
                 "install-scripts",
-                &[&format!("{source_label}: ignoring unparseable entry \"{key}\"")],
+                &[&format!(
+                    "{source_label}: ignoring unparseable entry \"{key}\""
+                )],
             );
             continue;
         };
@@ -95,7 +97,9 @@ fn validate_policy(policy: Option<Policy>, source_label: &str) -> Option<Policy>
             PolicyKey::Other(spec) if spec.starts_with("git") || spec.contains("://") => {
                 warn(
                     "install-scripts",
-                    &[&format!("{source_label}: ignoring unparseable entry \"{key}\"")],
+                    &[&format!(
+                        "{source_label}: ignoring unparseable entry \"{key}\""
+                    )],
                 );
             }
             _ => {
@@ -157,7 +161,9 @@ pub fn resolve_allow_scripts(npm: &dyn Npm, skip_project_config: bool) -> Result
         if rc.is_some() {
             warn(
                 "install-scripts",
-                &[&".npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line"],
+                &[
+                    &".npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line",
+                ],
             );
         }
         return Ok(ResolvedPolicy {
@@ -169,7 +175,9 @@ pub fn resolve_allow_scripts(npm: &dyn Npm, skip_project_config: bool) -> Result
         if rc.is_some() {
             warn(
                 "install-scripts",
-                &[&".npmrc allow-scripts setting is being ignored because package.json declares its own allowScripts field"],
+                &[
+                    &".npmrc allow-scripts setting is being ignored because package.json declares its own allowScripts field",
+                ],
             );
         }
         return Ok(ResolvedPolicy {

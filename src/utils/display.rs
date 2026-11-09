@@ -164,7 +164,9 @@ impl Display {
     pub fn log(&self, level: Level, prefix: &str, body: &str) {
         let mut state = self.state.lock().expect("display lock");
         if state.buffering {
-            state.log_buffer.push((level, prefix.to_string(), body.to_string()));
+            state
+                .log_buffer
+                .push((level, prefix.to_string(), body.to_string()));
             return;
         }
         if level == Level::Notice && state.opts.loglevel < Level::Verbose {

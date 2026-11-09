@@ -18,10 +18,19 @@ const PROVIDER_HOSTNAME: &str = "https://github.com";
 const ENTITY_KEY: &str = "repository";
 
 static META_DEFINITIONS: &[FlagDef] = &[
-    FlagDef::new("file", FlagType::String, "Name of workflow file within a repositories .GitHub folder (must end in yaml, yml)").required(),
-    FlagDef::new("repository", FlagType::String, "Name of the repository in the format owner/repo")
-        .with_short('r')
-        .with_aliases(&["repo"]),
+    FlagDef::new(
+        "file",
+        FlagType::String,
+        "Name of workflow file within a repositories .GitHub folder (must end in yaml, yml)",
+    )
+    .required(),
+    FlagDef::new(
+        "repository",
+        FlagType::String,
+        "Name of the repository in the format owner/repo",
+    )
+    .with_short('r')
+    .with_aliases(&["repo"]),
     FlagDef::new("environment", FlagType::String, "CI environment name")
         .with_short('e')
         .with_aliases(&["env"]),
@@ -105,7 +114,9 @@ impl TrustProvider for GitHubProvider {
 
 fn entity_url(entity: &str, file: Option<&str>) -> Option<String> {
     match file {
-        Some(file) => Some(format!("{PROVIDER_HOSTNAME}/{entity}/blob/HEAD/.github/workflows/{file}")),
+        Some(file) => Some(format!(
+            "{PROVIDER_HOSTNAME}/{entity}/blob/HEAD/.github/workflows/{file}"
+        )),
         None => Some(format!("{PROVIDER_HOSTNAME}/{entity}")),
     }
 }
@@ -131,7 +142,11 @@ fn validate_file(file: &str) -> Result<()> {
     Ok(())
 }
 
-fn flags_to_options(npm: &mut (dyn Npm + '_), positional: &[String], flags: &Map<String, Value>) -> Result<TrustValues> {
+fn flags_to_options(
+    npm: &mut (dyn Npm + '_),
+    positional: &[String],
+    flags: &Map<String, Value>,
+) -> Result<TrustValues> {
     let content = optional_package_json(npm);
     let pkg_positional = positional.first().map(String::as_str);
     let pkg_json_name = content.get("name").and_then(Value::as_str);
@@ -153,7 +168,10 @@ fn flags_to_options(npm: &mut (dyn Npm + '_), positional: &[String], flags: &Map
     };
 
     let entity_from_flag = flags.get(ENTITY_KEY).and_then(Value::as_str);
-    let entity_from_json = git.as_ref().map(|(_, path)| path.as_str()).filter(|_| !invalid_pkg_json_provider_type);
+    let entity_from_json = git
+        .as_ref()
+        .map(|(_, path)| path.as_str())
+        .filter(|_| !invalid_pkg_json_provider_type);
     let entity = entity_from_flag.or(entity_from_json);
     let used_repository_in_json = entity_from_flag.is_none() && entity_from_json.is_some();
     let mismatch_json_repository =
@@ -174,10 +192,11 @@ fn flags_to_options(npm: &mut (dyn Npm + '_), positional: &[String], flags: &Map
         }
     }
 
-    let file = flags
-        .get("file")
-        .and_then(Value::as_str)
-        .ok_or_else(|| NpmError::new(format!("{PROVIDER_FILE} must be specified with the file option")))?;
+    let file = flags.get("file").and_then(Value::as_str).ok_or_else(|| {
+        NpmError::new(format!(
+            "{PROVIDER_FILE} must be specified with the file option"
+        ))
+    })?;
     if !file.ends_with(".yml") && !file.ends_with(".yaml") {
         return Err(NpmError::new(format!(
             "{PROVIDER_FILE} must end in .yml or .yaml"
@@ -217,15 +236,21 @@ fn flags_to_options(npm: &mut (dyn Npm + '_), positional: &[String], flags: &Map
     let mut urls = Map::new();
     urls.insert(
         "package".into(),
-        frontend_url(npm, pkg_name).map(Value::String).unwrap_or(Value::Null),
+        frontend_url(npm, pkg_name)
+            .map(Value::String)
+            .unwrap_or(Value::Null),
     );
     urls.insert(
         ENTITY_KEY.into(),
-        entity_url(entity, None).map(Value::String).unwrap_or(Value::Null),
+        entity_url(entity, None)
+            .map(Value::String)
+            .unwrap_or(Value::Null),
     );
     urls.insert(
         "file".into(),
-        entity_url(entity, Some(file)).map(Value::String).unwrap_or(Value::Null),
+        entity_url(entity, Some(file))
+            .map(Value::String)
+            .unwrap_or(Value::Null),
     );
 
     Ok(TrustValues {

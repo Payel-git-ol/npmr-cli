@@ -17,10 +17,10 @@ pub fn validate_uuid(value: &str, what: &str) -> crate::utils::errors::Result<()
     if uuid_regex().is_match(value) {
         return Ok(());
     }
-    Err(crate::utils::errors::NpmError::new(format!(
-        "Invalid {what}: {value} is not a valid UUID"
-    ))
-    .with_code("EBADUUID"))
+    Err(
+        crate::utils::errors::NpmError::new(format!("Invalid {what}: {value} is not a valid UUID"))
+            .with_code("EBADUUID"),
+    )
 }
 
 #[cfg(test)]

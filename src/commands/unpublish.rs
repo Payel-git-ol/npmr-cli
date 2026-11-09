@@ -14,7 +14,6 @@ pub static META: CommandMeta = CommandMeta::new("unpublish", "Remove a package f
     .with_usage(&["[<package-spec>]"])
     .workspaces();
 
-
 /// Splits `name@spec`; `None` means the whole project.
 fn parse_spec(arg: &str) -> (String, Option<String>) {
     match arg.rfind('@') {
@@ -47,7 +46,9 @@ impl Unpublish {
             Some(arg) => {
                 let (name, version) = parse_spec(arg);
                 match version {
-                    Some(version) if version != "*" && semver::Version::parse(&version).is_err() => {
+                    Some(version)
+                        if version != "*" && semver::Version::parse(&version).is_err() =>
+                    {
                         return Err(META.usage_error(
                             "Can only unpublish a single version, or the entire project.\nTags and ranges are not supported.",
                         ));
@@ -57,12 +58,14 @@ impl Unpublish {
             }
             None => None,
         };
-        silly("unpublish", &[&"args[0]", &args.first().cloned().unwrap_or_default()]);
+        silly(
+            "unpublish",
+            &[&"args[0]", &args.first().cloned().unwrap_or_default()],
+        );
 
         if spec.as_ref().and_then(|(_, v)| v.as_deref()) == Some("*") && !force {
-            return Err(META.usage_error(
-                "Refusing to delete entire project.\nRun with --force to do this.",
-            ));
+            return Err(META
+                .usage_error("Refusing to delete entire project.\nRun with --force to do this."));
         }
 
         let manifest = Self::read_manifest(local_prefix);

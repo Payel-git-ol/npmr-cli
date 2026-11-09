@@ -6,19 +6,17 @@ use crate::commands::command::{Command, CommandMeta};
 use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 
-pub static META: CommandMeta = CommandMeta::new(
-    "team",
-    "Manage organization teams and team memberships",
-)
-.with_params(&["registry", "otp", "parseable", "json"])
-.with_usage(&[
-    "create <scope:team> [--otp <otpcode>]",
-    "destroy <scope:team> [--otp <otpcode>]",
-    "add <scope:team> <user> [--otp <otpcode>]",
-    "rm <scope:team> <user> [--otp <otpcode>]",
-    "ls <scope>|<scope:team>",
-])
-.skip_validation();
+pub static META: CommandMeta =
+    CommandMeta::new("team", "Manage organization teams and team memberships")
+        .with_params(&["registry", "otp", "parseable", "json"])
+        .with_usage(&[
+            "create <scope:team> [--otp <otpcode>]",
+            "destroy <scope:team> [--otp <otpcode>]",
+            "add <scope:team> <user> [--otp <otpcode>]",
+            "rm <scope:team> <user> [--otp <otpcode>]",
+            "ls <scope>|<scope:team>",
+        ])
+        .skip_validation();
 
 pub struct Team;
 

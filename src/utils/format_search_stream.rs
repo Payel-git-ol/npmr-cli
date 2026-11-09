@@ -3,7 +3,7 @@
 
 use serde_json::Value;
 
-use crate::utils::display::{paint, Color};
+use crate::utils::display::{Color, paint};
 
 /// The package fields the formatter reads.
 #[derive(Debug, Clone, Default)]
@@ -50,24 +50,40 @@ impl SearchResult {
                     .iter()
                     .filter_map(|m| match m {
                         Value::String(s) => Some(s.clone()),
-                        Value::Object(o) => o.get("username").and_then(Value::as_str).map(str::to_string),
+                        Value::Object(o) => o
+                            .get("username")
+                            .and_then(Value::as_str)
+                            .map(str::to_string),
                         _ => None,
                     })
                     .collect()
             })
             .unwrap_or_default();
         Self {
-            name: value.get("name").and_then(Value::as_str).unwrap_or_default().to_string(),
-            description: value.get("description").and_then(Value::as_str).map(str::to_string),
+            name: value
+                .get("name")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string(),
+            description: value
+                .get("description")
+                .and_then(Value::as_str)
+                .map(str::to_string),
             maintainers,
             publisher: value
                 .get("publisher")
                 .and_then(|p| p.get("username"))
                 .and_then(Value::as_str)
                 .map(str::to_string),
-            date: value.get("date").and_then(Value::as_str).map(str::to_string),
+            date: value
+                .get("date")
+                .and_then(Value::as_str)
+                .map(str::to_string),
             keywords,
-            version: value.get("version").and_then(Value::as_str).map(str::to_string),
+            version: value
+                .get("version")
+                .and_then(Value::as_str)
+                .map(str::to_string),
             raw: value.clone(),
         }
     }
@@ -131,7 +147,12 @@ pub fn text_block(result: &SearchResult, opts: &FormatOptions) -> Option<String>
     if !keep(result, &opts.exclude) {
         return None;
     }
-    let mut args: Vec<String> = opts.args.iter().map(|a| a.to_lowercase()).filter(|a| !a.is_empty()).collect();
+    let mut args: Vec<String> = opts
+        .args
+        .iter()
+        .map(|a| a.to_lowercase())
+        .filter(|a| !a.is_empty())
+        .collect();
     args.sort_by_key(|a| a.len());
     let cyan = |s: &str| paint(s, Color::Cyan, opts.color);
     let blue = |s: &str| paint(s, Color::Blue, opts.color);

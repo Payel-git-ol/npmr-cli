@@ -64,7 +64,10 @@ impl Ci {
             verbose("loadVirtual", &[&err.to_string()]);
             META.usage_error(NO_LOCKFILE)
         })?;
-        let version = lock.get("lockfileVersion").and_then(serde_json::Value::as_u64).unwrap_or(0);
+        let version = lock
+            .get("lockfileVersion")
+            .and_then(serde_json::Value::as_u64)
+            .unwrap_or(0);
         if version < 1 {
             verbose("loadVirtual", &[&"lockfileVersion < 1"]);
             return Err(META.usage_error(NO_LOCKFILE));
@@ -80,7 +83,9 @@ impl Ci {
                 );
             }
         }
-        errors.extend(crate::utils::validate_lockfile::validate_npm_extension(&lock, None));
+        errors.extend(crate::utils::validate_lockfile::validate_npm_extension(
+            &lock, None,
+        ));
         if !errors.is_empty() {
             return Err(META.usage_error(format!(
                 "`npm ci` can only install packages when your package.json and package-lock.json are in sync. \
@@ -94,7 +99,9 @@ impl Ci {
 
 /// The ideal inventory is just the currently installed tree until resolution
 /// is ported; existing installs therefore validate byte-for-byte.
-fn read_ideal_inventory(prefix: &Path) -> std::collections::BTreeMap<String, crate::utils::validate_lockfile::LockedNode> {
+fn read_ideal_inventory(
+    prefix: &Path,
+) -> std::collections::BTreeMap<String, crate::utils::validate_lockfile::LockedNode> {
     let mut inventory = std::collections::BTreeMap::new();
     for node in crate::utils::allow_scripts_writer::scan_nodes(prefix) {
         let location = node

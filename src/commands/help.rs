@@ -50,7 +50,10 @@ impl Command for Help {
                 // the closest fallback for now.
                 open_url(
                     npm,
-                    &format!("https://docs.npmjs.com/cli/v{}/using-npm/config", crate::VERSION.split('.').next().unwrap_or("11")),
+                    &format!(
+                        "https://docs.npmjs.com/cli/v{}/using-npm/config",
+                        crate::VERSION.split('.').next().unwrap_or("11")
+                    ),
                     &format!("help for {}", man.display()),
                     true,
                 )
@@ -69,7 +72,9 @@ fn man_page_path(npm: &dyn Npm, topic: &str) -> Option<PathBuf> {
         };
         for entry in entries.flatten() {
             let name = entry.file_name().to_string_lossy().into_owned();
-            if name == format!("npm-{topic}.{n}") || (!topic.contains('-') && name == format!("npm-{topic}-{n}.{n}")) {
+            if name == format!("npm-{topic}.{n}")
+                || (!topic.contains('-') && name == format!("npm-{topic}-{n}.{n}"))
+            {
                 return Some(entry.path());
             }
         }

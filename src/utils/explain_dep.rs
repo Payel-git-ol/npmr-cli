@@ -3,7 +3,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::utils::display::{paint, Color};
+use crate::utils::display::{Color, paint};
 
 /// A dependency edge that pulled a node in.
 #[derive(Debug, Clone, Default)]
@@ -74,7 +74,14 @@ fn indent(text: &str) -> String {
 /// The package name and version, plus location and type flags.
 pub fn print_node(node: &ExplainNode, color: bool) -> String {
     let mut extra = Vec::new();
-    for meta in ["extraneous", "dev", "optional", "peer", "bundled", "overridden"] {
+    for meta in [
+        "extraneous",
+        "dev",
+        "optional",
+        "peer",
+        "bundled",
+        "overridden",
+    ] {
         if let Some(label) = node.type_label(meta) {
             extra.push(format!(" {}", color_type(label, color)));
         }
@@ -92,7 +99,12 @@ pub fn print_node(node: &ExplainNode, color: bool) -> String {
     format!("{pkgid}{}{location}", extra.join(""))
 }
 
-fn explain_links_in(node: &ExplainNode, depth: i32, color: bool, seen: &mut BTreeSet<String>) -> String {
+fn explain_links_in(
+    node: &ExplainNode,
+    depth: i32,
+    color: bool,
+    seen: &mut BTreeSet<String>,
+) -> String {
     if node.links_in.is_empty() || depth <= 0 {
         return String::new();
     }
@@ -104,7 +116,12 @@ fn explain_links_in(node: &ExplainNode, depth: i32, color: bool, seen: &mut BTre
     indent(&format!("\n{}", messages.join("\n")))
 }
 
-fn explain_dependents(node: &ExplainNode, depth: i32, color: bool, seen: &mut BTreeSet<String>) -> String {
+fn explain_dependents(
+    node: &ExplainNode,
+    depth: i32,
+    color: bool,
+    seen: &mut BTreeSet<String>,
+) -> String {
     if node.dependents.is_empty() || depth <= 0 {
         return String::new();
     }
@@ -142,10 +159,19 @@ fn explain_dependents(node: &ExplainNode, depth: i32, color: bool, seen: &mut BT
 }
 
 /// Renders an edge as `type dep@"spec" from ...`.
-pub fn explain_edge(edge: &ExplainEdge, depth: i32, color: bool, seen: &mut BTreeSet<String>) -> String {
+pub fn explain_edge(
+    edge: &ExplainEdge,
+    depth: i32,
+    color: bool,
+    seen: &mut BTreeSet<String>,
+) -> String {
     let mut dep = format!("{}@\"{}\"", edge.name, edge.spec);
     if edge.overridden {
-        dep = format!("{} {dep} (was \"{}\")", color_type("overridden", color), edge.raw_spec);
+        dep = format!(
+            "{} {dep} (was \"{}\")",
+            color_type("overridden", color),
+            edge.raw_spec
+        );
     }
     let from = explain_from(&edge.from, depth, color, seen);
     let type_prefix = if edge.edge_type == "prod" {
@@ -161,7 +187,12 @@ pub fn explain_edge(edge: &ExplainEdge, depth: i32, color: bool, seen: &mut BTre
     format!("{type_prefix}{bundled}{dep} from {from}")
 }
 
-fn explain_from(from: &ExplainNode, depth: i32, color: bool, seen: &mut BTreeSet<String>) -> String {
+fn explain_from(
+    from: &ExplainNode,
+    depth: i32,
+    color: bool,
+    seen: &mut BTreeSet<String>,
+) -> String {
     if from.name.is_empty() && from.version.is_empty() {
         return "the root project".to_string();
     }
@@ -192,7 +223,12 @@ pub fn explain_node(node: &ExplainNode, depth: i32, color: bool) -> String {
     explain_node_inner(node, depth, color, &mut seen)
 }
 
-fn explain_node_inner(node: &ExplainNode, depth: i32, color: bool, seen: &mut BTreeSet<String>) -> String {
+fn explain_node_inner(
+    node: &ExplainNode,
+    depth: i32,
+    color: bool,
+    seen: &mut BTreeSet<String>,
+) -> String {
     format!(
         "{}{}{}",
         print_node(node, color),

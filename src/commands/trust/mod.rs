@@ -51,8 +51,10 @@ impl Command for Trust {
             "circleci" => circleci::TrustCircleCi::new().exec(npm, rest),
             "list" => list::TrustList::new().exec(npm, rest),
             "revoke" => revoke::TrustRevoke::new().exec(npm, rest),
-            other => Err(NpmError::new(format!("Unknown subcommand: {other}"))
-                .with_code("EUNKNOWNCOMMAND")),
+            other => {
+                Err(NpmError::new(format!("Unknown subcommand: {other}"))
+                    .with_code("EUNKNOWNCOMMAND"))
+            }
         }
     }
 }

@@ -280,7 +280,14 @@ pub fn validate_common(npm: &dyn crate::npm::Npm, meta: &CommandMeta) -> Result<
     if strict && !file_unknowns.is_empty() {
         let lines = file_unknowns
             .iter()
-            .map(|u| format!("  - {} config \"{}\" from {}", u.where_.as_str(), u.key, u.source))
+            .map(|u| {
+                format!(
+                    "  - {} config \"{}\" from {}",
+                    u.where_.as_str(),
+                    u.key,
+                    u.source
+                )
+            })
             .collect::<Vec<_>>()
             .join("\n");
         return Err(NpmError::new(format!(

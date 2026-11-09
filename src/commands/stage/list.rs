@@ -38,10 +38,9 @@ impl Command for StageList {
             Some(arg) => {
                 let (name, spec) = split_spec(arg);
                 if spec != "*" {
-                    return Err(
-                        self.meta()
-                            .usage_error("Version specifiers are not supported for listing staged packages"),
-                    );
+                    return Err(self.meta().usage_error(
+                        "Version specifiers are not supported for listing staged packages",
+                    ));
                 }
                 Some(name)
             }
@@ -95,8 +94,8 @@ fn split_spec(arg: &str) -> (String, String) {
 
 /// TODO: `GET /-/stage?page=<n>&perPage=<n>` until the pages run out.
 fn fetch_all_pages(_npm: &dyn Npm, _package_filter: Option<&str>) -> Result<Vec<Value>> {
-    Err(NpmError::new(
-        "Could not list staged packages: registry request is not implemented yet",
+    Err(
+        NpmError::new("Could not list staged packages: registry request is not implemented yet")
+            .with_code("ENOTSUP"),
     )
-    .with_code("ENOTSUP"))
 }

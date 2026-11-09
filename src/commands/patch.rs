@@ -10,28 +10,26 @@ use crate::commands::command::{Command, CommandMeta};
 use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 
-pub static META: CommandMeta = CommandMeta::new(
-    "patch",
-    "Apply local patches to installed dependencies",
-)
-.with_params(&[
-    "patches-dir",
-    "allow-unused-patches",
-    "ignore-patch-failures",
-    "edit-dir",
-    "ignore-existing",
-    "keep-edit-dir",
-    "to",
-    "registry",
-])
-.with_usage(&[
-    "<pkg>[@<version>]",
-    "add <pkg>[@<version>] [--edit-dir <path>] [--ignore-existing]",
-    "commit <edit-dir> [--patches-dir <dir>] [--keep-edit-dir]",
-    "update <pkg>[@<old-version>] [--to <new-version>] [--patches-dir <dir>]",
-    "ls",
-    "rm <pkg>[@<version>]",
-]);
+pub static META: CommandMeta =
+    CommandMeta::new("patch", "Apply local patches to installed dependencies")
+        .with_params(&[
+            "patches-dir",
+            "allow-unused-patches",
+            "ignore-patch-failures",
+            "edit-dir",
+            "ignore-existing",
+            "keep-edit-dir",
+            "to",
+            "registry",
+        ])
+        .with_usage(&[
+            "<pkg>[@<version>]",
+            "add <pkg>[@<version>] [--edit-dir <path>] [--ignore-existing]",
+            "commit <edit-dir> [--patches-dir <dir>] [--keep-edit-dir]",
+            "update <pkg>[@<old-version>] [--to <new-version>] [--patches-dir <dir>]",
+            "ls",
+            "rm <pkg>[@<version>]",
+        ]);
 
 const SUBCOMMANDS: &[&str] = &["add", "commit", "update", "ls", "rm"];
 
@@ -100,8 +98,11 @@ impl Patch {
         let _keep = npm.store().get_bool("keep-edit-dir");
         let edit_path = PathBuf::from(edit_dir);
         if !edit_path.is_dir() {
-            return Err(NpmError::new(format!("Patch directory {} does not exist", edit_path.display()))
-                .with_code("EPATCHEDITDIR"));
+            return Err(NpmError::new(format!(
+                "Patch directory {} does not exist",
+                edit_path.display()
+            ))
+            .with_code("EPATCHEDITDIR"));
         }
         Err(NpmError::new(
             "Cannot commit a patch: extracting the original package is not implemented yet",
@@ -165,7 +166,9 @@ impl Patch {
                 .unwrap_or_default()
                 .to_string();
             patched.remove(key);
-            let still_used = patched.values().any(|v| v.as_str() == Some(patch_path.as_str()));
+            let still_used = patched
+                .values()
+                .any(|v| v.as_str() == Some(patch_path.as_str()));
             if !still_used {
                 let abs = root.join(&patch_path);
                 let relative = abs
@@ -239,13 +242,13 @@ mod tests {
 
     #[test]
     fn parses_selectors_and_specs() {
-        assert_eq!(parse_selector("lodash@4.17.21"), ("lodash".into(), "4.17.21".into()));
+        assert_eq!(
+            parse_selector("lodash@4.17.21"),
+            ("lodash".into(), "4.17.21".into())
+        );
         assert_eq!(parse_selector("@a/b@^1"), ("@a/b".into(), "^1".into()));
         assert_eq!(parse_spec("lodash"), ("lodash".into(), None));
         assert_eq!(parse_spec("lodash@*"), ("lodash".into(), None));
-        assert_eq!(
-            parse_spec("lodash@4"),
-            ("lodash".into(), Some("4".into()))
-        );
+        assert_eq!(parse_spec("lodash@4"), ("lodash".into(), Some("4".into())));
     }
 }

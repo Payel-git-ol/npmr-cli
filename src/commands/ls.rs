@@ -1,7 +1,7 @@
 //! Port of `lib/commands/ls.js` (plus the `ll` alias).
 
-use crate::commands::command::{Command, CommandMeta, ParsedFlags};
 use crate::commands::ArboristCommand;
+use crate::commands::command::{Command, CommandMeta, ParsedFlags};
 use crate::npm::Npm;
 use crate::utils::errors::Result;
 

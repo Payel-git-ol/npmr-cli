@@ -50,9 +50,7 @@ impl RebuildSpec {
             None => true,
             Some(spec) => semver::VersionReq::parse(spec)
                 .ok()
-                .is_some_and(|req| {
-                    semver::Version::parse(version).is_ok_and(|v| req.matches(&v))
-                }),
+                .is_some_and(|req| semver::Version::parse(version).is_ok_and(|v| req.matches(&v))),
         }
     }
 }
@@ -128,16 +126,16 @@ impl Command for Rebuild {
         };
         let _ = crate::utils::resolve_allow_scripts::resolve_allow_scripts(&*npm, false)?;
         let _ = specs;
-        Err(NpmError::new(
-            "npm rebuild requires the arborist tree, which is not implemented yet",
+        Err(
+            NpmError::new("npm rebuild requires the arborist tree, which is not implemented yet")
+                .with_code("ENOTSUP"),
         )
-        .with_code("ENOTSUP"))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_rebuild_spec, RebuildSpec};
+    use super::{RebuildSpec, parse_rebuild_spec};
 
     #[test]
     fn parses_names_and_ranges() {

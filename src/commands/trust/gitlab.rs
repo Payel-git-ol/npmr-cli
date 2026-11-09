@@ -18,7 +18,12 @@ const PROVIDER_HOSTNAME: &str = "https://gitlab.com";
 const ENTITY_KEY: &str = "project";
 
 static META_DEFINITIONS: &[FlagDef] = &[
-    FlagDef::new("file", FlagType::String, "Name of pipeline file (e.g., .gitlab-ci.yml)").required(),
+    FlagDef::new(
+        "file",
+        FlagType::String,
+        "Name of pipeline file (e.g., .gitlab-ci.yml)",
+    )
+    .required(),
     FlagDef::new(
         "project",
         FlagType::String,
@@ -186,7 +191,9 @@ fn flags_to_options(
     }
 
     let file = flags.get("file").and_then(Value::as_str).ok_or_else(|| {
-        NpmError::new(format!("{PROVIDER_FILE} must be specified with the file option"))
+        NpmError::new(format!(
+            "{PROVIDER_FILE} must be specified with the file option"
+        ))
     })?;
     if !file.ends_with(".yml") && !file.ends_with(".yaml") {
         return Err(NpmError::new(format!(
@@ -222,7 +229,9 @@ fn flags_to_options(
     let mut urls = Map::new();
     urls.insert(
         "package".into(),
-        frontend_url(npm, pkg_name).map(Value::String).unwrap_or(Value::Null),
+        frontend_url(npm, pkg_name)
+            .map(Value::String)
+            .unwrap_or(Value::Null),
     );
     urls.insert(ENTITY_KEY.into(), Value::String(entity_url(entity, None)));
     urls.insert("file".into(), Value::String(entity_url(entity, Some(file))));

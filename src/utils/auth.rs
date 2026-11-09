@@ -64,16 +64,20 @@ pub fn login(npm: &dyn Npm, username: &str, password: &str) -> Result<LoginCreds
         .and_then(Value::as_str)
         .unwrap_or_default()
         .to_string();
-    let scope = opts.get("scope").and_then(Value::as_str).map(str::to_string);
+    let scope = opts
+        .get("scope")
+        .and_then(Value::as_str)
+        .map(str::to_string);
     let _ = (username, password);
 
     let message = match scope {
         Some(scope) if !scope.is_empty() => format!("Logged in to scope {scope} on {registry}."),
         _ => format!("Logged in on {registry}."),
     };
-    Err(NpmError::new("Registry login is not implemented yet").with_code("ENOTSUP"))
-        .map(|_: ()| LoginCreds {
+    Err(NpmError::new("Registry login is not implemented yet").with_code("ENOTSUP")).map(|_: ()| {
+        LoginCreds {
             message,
             token: String::new(),
-        })
+        }
+    })
 }

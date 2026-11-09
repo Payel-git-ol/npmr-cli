@@ -28,7 +28,10 @@ pub fn update_notifier(npm: &dyn crate::npm::Npm) -> Option<String> {
     }
     if npm.global()
         && matches!(npm.command(), Some("install") | Some("update"))
-        && npm.argv().iter().any(|a| a.starts_with("npm@") || a == "npm")
+        && npm
+            .argv()
+            .iter()
+            .any(|a| a.starts_with("npm@") || a == "npm")
     {
         return None;
     }
@@ -83,7 +86,10 @@ pub fn update_banner(current: &Version, latest: &str, color: bool) -> String {
         paint(kind, kind_color),
         paint(&current.to_string(), kind_color),
         paint(latest, "34"),
-        paint(&format!("https://github.com/npm/cli/releases/tag/v{latest}"), "34"),
+        paint(
+            &format!("https://github.com/npm/cli/releases/tag/v{latest}"),
+            "34"
+        ),
         paint(&format!("npm install -g npm@{latest}"), "4"),
     )
 }

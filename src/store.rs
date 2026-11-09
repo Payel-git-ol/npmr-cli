@@ -84,7 +84,10 @@ impl Store {
     }
 
     fn apply_defaults(&mut self) {
-        self.define("registry", Value::String("https://registry.npmjs.org/".into()));
+        self.define(
+            "registry",
+            Value::String("https://registry.npmjs.org/".into()),
+        );
         self.define("cache", Value::String(default_cache_dir()));
         self.define("logspeed", Value::from(0));
         self.define("loglevel", Value::String("notice".into()));
@@ -249,7 +252,11 @@ impl Store {
         match self.get(key) {
             Some(Value::Array(items)) => items
                 .iter()
-                .map(|v| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string()))
+                .map(|v| {
+                    v.as_str()
+                        .map(str::to_string)
+                        .unwrap_or_else(|| v.to_string())
+                })
                 .collect(),
             Some(Value::String(s)) if !s.is_empty() => vec![s.clone()],
             _ => Vec::new(),
@@ -492,7 +499,10 @@ mod tests {
 
     #[test]
     fn cli_flag_wins() {
-        let mut store = Store::new(PathBuf::from("."), vec!["npm".into(), "--loglevel=warn".into()]);
+        let mut store = Store::new(
+            PathBuf::from("."),
+            vec!["npm".into(), "--loglevel=warn".into()],
+        );
         store.load().unwrap();
         assert_eq!(store.get_str("loglevel"), "warn");
     }

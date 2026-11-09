@@ -44,7 +44,10 @@ fn split_lines(text: &str) -> Vec<&str> {
     if text.ends_with('\n') {
         lines.pop();
     }
-    lines.iter().map(|l| l.strip_suffix('\r').unwrap_or(l)).collect()
+    lines
+        .iter()
+        .map(|l| l.strip_suffix('\r').unwrap_or(l))
+        .collect()
 }
 
 /// Longest-common-subsequence diff producing the hunks `diff`'s
@@ -118,9 +121,17 @@ fn file_patch(file: &str, a: Option<&str>, b: Option<&str>) -> String {
         let new_len = ops[start..end].iter().filter(|(k, _)| *k != '-').count();
         header.push_str(&format!(
             "@@ -{},{} +{},{} @@\n",
-            if old_len == 0 { old_start.saturating_sub(1) } else { old_start },
+            if old_len == 0 {
+                old_start.saturating_sub(1)
+            } else {
+                old_start
+            },
             old_len,
-            if new_len == 0 { new_start.saturating_sub(1) } else { new_start },
+            if new_len == 0 {
+                new_start.saturating_sub(1)
+            } else {
+                new_start
+            },
             new_len
         ));
         for (kind, line) in &ops[start..end] {

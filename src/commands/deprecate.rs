@@ -17,9 +17,7 @@ pub struct Deprecate {
 
 impl Deprecate {
     pub fn new() -> Self {
-        Self {
-            undeprecate: false,
-        }
+        Self { undeprecate: false }
     }
 
     pub fn undeprecate() -> Self {

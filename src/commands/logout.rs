@@ -40,16 +40,19 @@ impl Command for Logout {
             .is_some_and(|v| !v.is_empty());
 
         if !has_token {
-            return Err(
-                crate::utils::errors::NpmError::new(format!("not logged in to {registry}, so can't log out!"))
-                    .with_code("ENEEDAUTH"),
-            );
+            return Err(crate::utils::errors::NpmError::new(format!(
+                "not logged in to {registry}, so can't log out!"
+            ))
+            .with_code("ENEEDAUTH"));
         }
 
         // TODO: call `DELETE /-/user/token/<token>`; the local token is the
         // authoritative copy for now.
-        npm.store_mut()
-            .set(serde_json::Value::Null, &token_key, crate::store::ConfigSource::User);
+        npm.store_mut().set(
+            serde_json::Value::Null,
+            &token_key,
+            crate::store::ConfigSource::User,
+        );
         notice("", &[&format!("logged out of {registry}")]);
         Ok(())
     }

@@ -51,15 +51,18 @@ impl Command for Edit {
         }
         let dir: PathBuf = npm.dir().join(split_package_names(&args[0]));
         if !dir.exists() {
-            return Err(NpmError::new(format!("no such package: {}", dir.display()))
-                .with_code("ENOENT"));
+            return Err(
+                NpmError::new(format!("no such package: {}", dir.display())).with_code("ENOENT")
+            );
         }
 
         let editor = npm.store().get_str("editor");
         let mut words = editor.split_whitespace();
         let Some(bin) = words.next() else {
-            return Err(NpmError::new("No editor configured, set the `editor` config")
-                .with_code("ENOEDITOR"));
+            return Err(
+                NpmError::new("No editor configured, set the `editor` config")
+                    .with_code("ENOEDITOR"),
+            );
         };
         let status = std::process::Command::new(bin)
             .args(words)
@@ -68,7 +71,9 @@ impl Command for Edit {
             .map_err(NpmError::from)?;
         if !status.success() {
             let code = status.code().unwrap_or(1);
-            return Err(NpmError::new(format!("editor process exited with code: {code}")));
+            return Err(NpmError::new(format!(
+                "editor process exited with code: {code}"
+            )));
         }
 
         npm.exec("rebuild", &[dir.to_string_lossy().into_owned()])

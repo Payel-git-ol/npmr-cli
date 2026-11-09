@@ -5,10 +5,9 @@ use crate::commands::install::INSTALL_PARAMS;
 use crate::npm::Npm;
 use crate::utils::errors::Result;
 
-pub static META: CommandMeta =
-    CommandMeta::new("install-test", "Install package(s) and run tests")
-        .with_params(INSTALL_PARAMS)
-        .arborist();
+pub static META: CommandMeta = CommandMeta::new("install-test", "Install package(s) and run tests")
+    .with_params(INSTALL_PARAMS)
+    .arborist();
 
 pub struct InstallTest;
 

@@ -47,7 +47,10 @@ pub fn read_tree(_npm: &dyn Npm, path: &Path) -> Result<Value> {
         }
     }
 
-    let root_name = manifest.get("name").and_then(Value::as_str).unwrap_or("npmr");
+    let root_name = manifest
+        .get("name")
+        .and_then(Value::as_str)
+        .unwrap_or("npmr");
     Ok(json!({
         "name": root_name,
         "version": manifest.get("version"),
@@ -75,7 +78,11 @@ pub fn format_tree(tree: &Value, parseable: bool, long: bool) -> String {
     let root_name = tree.get("name").and_then(Value::as_str).unwrap_or("root");
     let root_version = tree.get("version").and_then(Value::as_str).unwrap_or("");
     if parseable {
-        lines.push(format!("{} {}", tree.get("path").and_then(Value::as_str).unwrap_or(""), root_name));
+        lines.push(format!(
+            "{} {}",
+            tree.get("path").and_then(Value::as_str).unwrap_or(""),
+            root_name
+        ));
     } else if root_version.is_empty() {
         lines.push(root_name.to_string());
     } else {

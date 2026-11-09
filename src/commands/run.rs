@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
-use crate::commands::command::{Command, CommandMeta};
 use crate::commands::arborist_cmd::WorkspaceContext;
+use crate::commands::command::{Command, CommandMeta};
 use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 use crate::utils::is_windows::is_windows_shell;
@@ -131,7 +131,10 @@ pub fn event_command(
 }
 
 fn shell_quote(arg: &str) -> String {
-    if arg.chars().all(|c| c.is_ascii_alphanumeric() || "-_./:@=+".contains(c)) {
+    if arg
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || "-_./:@=+".contains(c))
+    {
         arg.to_string()
     } else if cfg!(windows) {
         format!("\"{}\"", arg.replace('"', "\\\""))
@@ -157,7 +160,13 @@ pub fn event_chain(manifest: &Value, event: &str, ignore_scripts: bool) -> Vec<(
 }
 
 impl RunScript {
-    fn run_event(&self, npm: &dyn Npm, path: &Path, manifest: &Value, args: &[String]) -> Result<()> {
+    fn run_event(
+        &self,
+        npm: &dyn Npm,
+        path: &Path,
+        manifest: &Value,
+        args: &[String],
+    ) -> Result<()> {
         let Some(event) = args.first() else {
             return Ok(());
         };
@@ -214,7 +223,9 @@ impl RunScript {
             .unwrap_or_default();
         let mut lifecycles = Vec::new();
         let mut plain = Vec::new();
-        let has_lifecycles = scripts.keys().any(|k| LIFECYCLE_ORDER.contains(&k.as_str()));
+        let has_lifecycles = scripts
+            .keys()
+            .any(|k| LIFECYCLE_ORDER.contains(&k.as_str()));
         for (key, value) in scripts {
             if LIFECYCLE_ORDER.contains(&key.as_str()) {
                 lifecycles.push((key, value));
@@ -316,10 +327,7 @@ impl Command for RunScript {
             }
             let manifest = Self::read_package(&path);
             if let Err(err) = self.run_event(&ctx, &path, &manifest, args) {
-                let label = manifest
-                    .get("name")
-                    .and_then(Value::as_str)
-                    .unwrap_or(name);
+                let label = manifest.get("name").and_then(Value::as_str).unwrap_or(name);
                 crate::output::error(format!(
                     "Lifecycle script `{}` failed with error:\n{}\nworkspace: {label}\nlocation: {}",
                     args[0],

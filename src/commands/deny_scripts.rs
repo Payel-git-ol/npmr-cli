@@ -37,9 +37,7 @@ impl Command for DenyScripts {
             npm,
             Mode::Deny,
             args,
-            ModeOptions {
-                pending_flag: true,
-            },
+            ModeOptions { pending_flag: true },
         )
     }
 }

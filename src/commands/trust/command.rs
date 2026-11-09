@@ -52,7 +52,10 @@ pub struct TrustValues {
 /// Provider-specific hooks. Implemented by `github`, `gitlab` and `circleci`.
 pub trait TrustProvider {
     fn permission_flags(&self, flags: &Map<String, Value>) -> Result<(bool, bool)> {
-        let allow_publish = flags.get("allow-publish").and_then(Value::as_bool).unwrap_or(false);
+        let allow_publish = flags
+            .get("allow-publish")
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
         let allow_stage = flags
             .get("allow-stage-publish")
             .and_then(Value::as_bool)
@@ -87,8 +90,8 @@ pub fn trust_uri(package: &str) -> String {
 }
 
 pub fn trust_uri_with_id(package: &str, id: &str) -> String {
-    let encoded = percent_encoding::utf8_percent_encode(id, percent_encoding::NON_ALPHANUMERIC)
-        .to_string();
+    let encoded =
+        percent_encoding::utf8_percent_encode(id, percent_encoding::NON_ALPHANUMERIC).to_string();
     format!("{}/{encoded}", trust_uri(package))
 }
 
@@ -133,9 +136,7 @@ pub fn optional_package_json(npm: &dyn Npm) -> Map<String, Value> {
 
 /// Extracts `repository` from `package.json` for `type` (`github`/`gitlab`),
 /// returning `owner/repo`.
-pub fn repository_from_package_json(
-    content: &Map<String, Value>,
-) -> Option<(String, String)> {
+pub fn repository_from_package_json(content: &Map<String, Value>) -> Option<(String, String)> {
     let repository = content.get("repository")?;
     let url = match repository {
         Value::String(s) => s.clone(),
@@ -156,9 +157,15 @@ fn parse_hosted_url(url: &str) -> Option<(String, String)> {
         .trim_start_matches("git@");
     let (host, rest) = trimmed.split_once('/')?;
     let host = host.split_once(':').map(|(h, _)| h).unwrap_or(host);
-    let rest = rest.trim_end_matches(".git").split('#').next().unwrap_or(rest);
+    let rest = rest
+        .trim_end_matches(".git")
+        .split('#')
+        .next()
+        .unwrap_or(rest);
     let path = if rest.starts_with("scm/") {
-        rest.trim_start_matches("scm/").split_once('/').map(|(_, p)| p)?
+        rest.trim_start_matches("scm/")
+            .split_once('/')
+            .map(|(_, p)| p)?
     } else {
         rest
     };
@@ -202,7 +209,11 @@ pub fn log_options(npm: &dyn Npm, options: &TrustValues, pad: bool) {
             Value::String(s) => s.clone(),
             Value::Array(items) => items
                 .iter()
-                .map(|v| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string()))
+                .map(|v| {
+                    v.as_str()
+                        .map(str::to_string)
+                        .unwrap_or_else(|| v.to_string())
+                })
                 .collect::<Vec<_>>()
                 .join(", "),
             other => other.to_string(),
@@ -264,7 +275,12 @@ fn stdin_is_tty() -> bool {
 }
 
 /// Prints the configs returned by a create/list request.
-pub fn display_response_body(npm: &dyn Npm, body: &Value, package: &str, provider: &dyn TrustProvider) {
+pub fn display_response_body(
+    npm: &dyn Npm,
+    body: &Value,
+    package: &str,
+    provider: &dyn TrustProvider,
+) {
     let items: Vec<&Value> = match body {
         Value::Array(items) => items.iter().collect(),
         Value::Null => Vec::new(),
@@ -307,7 +323,10 @@ pub fn dialogue(npm: &dyn Npm, message: &str) {
 
 /// Shared `create` flow: validate flags, show what will be created, ask for
 /// confirmation and POST the config. TODO: perform the request.
-#[expect(clippy::too_many_arguments, reason = "mirrors the upstream JS signature")]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "mirrors the upstream JS signature"
+)]
 pub fn create_config(
     npm: &mut (dyn Npm + '_),
     meta: &CommandMeta,
@@ -340,7 +359,10 @@ pub fn create_config(
         npm,
         &format!("Anyone with {provider_entity} write access can publish to {package}"),
     );
-    dialogue(npm, "Two-factor authentication is required for this operation");
+    dialogue(
+        npm,
+        "Two-factor authentication is required for this operation",
+    );
     warn_if_custom_registry(npm);
     options.permissions = permissions;
     log_options(npm, &options, true);

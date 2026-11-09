@@ -6,15 +6,14 @@ use crate::npm::Npm;
 use crate::utils::errors::{NpmError, Result};
 use crate::utils::log::{info, verbose, warn};
 
-pub static META: CommandMeta =
-    CommandMeta::new("dist-tag", "Modify package distribution tags")
-        .with_params(&["workspace", "workspaces", "include-workspace-root"])
-        .with_usage(&[
-            "add <package-spec (with version)> [<tag>]",
-            "rm <package-spec> <tag>",
-            "ls [<package-spec>]",
-        ])
-        .workspaces();
+pub static META: CommandMeta = CommandMeta::new("dist-tag", "Modify package distribution tags")
+    .with_params(&["workspace", "workspaces", "include-workspace-root"])
+    .with_usage(&[
+        "add <package-spec (with version)> [<tag>]",
+        "rm <package-spec> <tag>",
+        "ls [<package-spec>]",
+    ])
+    .workspaces();
 
 pub struct DistTag;
 
@@ -26,17 +25,20 @@ impl DistTag {
     fn add(&self, spec: &str, tag: Option<&str>, default_tag: &str) -> Result<()> {
         let (name, version) = split_spec(spec);
         let tag = tag.unwrap_or(default_tag).to_string();
-        let target = name.as_ref().map(|n| format!("{n}@{version}")).unwrap_or_default();
+        let target = name
+            .as_ref()
+            .map(|n| format!("{n}@{version}"))
+            .unwrap_or_default();
         verbose("dist-tag add", &[&tag, &"to", &target]);
         let Some(name) = name else {
-            return Err(META.usage_error(
-                "must provide a spec with a name and version, and a tag to add",
-            ));
+            return Err(
+                META.usage_error("must provide a spec with a name and version, and a tag to add")
+            );
         };
         if version.is_empty() || tag.is_empty() {
-            return Err(META.usage_error(
-                "must provide a spec with a name and version, and a tag to add",
-            ));
+            return Err(
+                META.usage_error("must provide a spec with a name and version, and a tag to add")
+            );
         }
         let t = tag.trim();
         if is_semver_range(t) {
@@ -104,7 +106,9 @@ impl DistTag {
         let pkg = args.get(1).map(String::as_str);
         let tag = args.get(2).map(String::as_str);
         match cmd {
-            "add" | "a" | "set" | "s" => self.add(pkg.unwrap_or(""), tag, &npm.store().get_str("tag")),
+            "add" | "a" | "set" | "s" => {
+                self.add(pkg.unwrap_or(""), tag, &npm.store().get_str("tag"))
+            }
             "rm" | "r" | "del" | "d" | "remove" => self.remove(pkg.unwrap_or(""), tag),
             "ls" | "l" | "sl" | "list" => self.list(&*npm, pkg),
             _ if pkg.is_none() => self.list(&*npm, (!cmd.is_empty()).then_some(cmd)),
@@ -132,9 +136,8 @@ impl Command for DistTag {
         let cmd = args.first().map(String::as_str).unwrap_or("");
         let pkg = args.get(1).map(String::as_str);
         let is_list = matches!(cmd, "ls" | "l" | "sl" | "list");
-        let local_only = |value: Option<&str>| {
-            value.is_none_or(|v| v == "." || v.starts_with(".@"))
-        };
+        let local_only =
+            |value: Option<&str>| value.is_none_or(|v| v == "." || v.starts_with(".@"));
         if is_list && local_only(pkg) || pkg.is_none() && local_only(Some(cmd)) {
             return self.list_workspaces(npm);
         }
@@ -153,7 +156,10 @@ fn registry_stub(name: &str) -> NpmError {
 /// Splits `name@version`; a scoped name keeps its leading `@`.
 fn split_spec(spec: &str) -> (Option<String>, String) {
     match spec.rfind('@') {
-        Some(0) | None => (Some(spec.to_string()).filter(|s| !s.is_empty()), String::new()),
+        Some(0) | None => (
+            Some(spec.to_string()).filter(|s| !s.is_empty()),
+            String::new(),
+        ),
         Some(idx) => (Some(spec[..idx].to_string()), spec[idx + 1..].to_string()),
     }
 }
@@ -166,10 +172,7 @@ fn is_semver_range(text: &str) -> bool {
         }
         part.split_whitespace().all(|token| {
             let stripped = token.trim_start_matches(['>', '<', '=', '~', '^']);
-            stripped
-                .chars()
-                .next()
-                .is_some_and(|c| c.is_ascii_digit())
+            stripped.chars().next().is_some_and(|c| c.is_ascii_digit())
                 || matches!(stripped, "x" | "X" | "*")
         })
     }) && text.chars().any(|c| c.is_ascii_digit() || c == '*')
@@ -181,8 +184,14 @@ mod tests {
 
     #[test]
     fn splits_scoped_and_plain_names() {
-        assert_eq!(split_spec("foo@1.0.0"), (Some("foo".into()), "1.0.0".into()));
-        assert_eq!(split_spec("@a/b@next"), (Some("@a/b".into()), "next".into()));
+        assert_eq!(
+            split_spec("foo@1.0.0"),
+            (Some("foo".into()), "1.0.0".into())
+        );
+        assert_eq!(
+            split_spec("@a/b@next"),
+            (Some("@a/b".into()), "next".into())
+        );
         assert_eq!(split_spec("@a/b"), (Some("@a/b".into()), String::new()));
     }
 

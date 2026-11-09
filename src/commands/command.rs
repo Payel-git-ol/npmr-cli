@@ -248,7 +248,10 @@ pub struct ParsedFlags {
 
 impl ParsedFlags {
     pub fn bool_flag(&self, key: &str) -> bool {
-        self.flags.get(key).and_then(Value::as_bool).unwrap_or(false)
+        self.flags
+            .get(key)
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
     }
 
     pub fn str_flag(&self, key: &str) -> Option<&str> {
@@ -307,7 +310,9 @@ pub fn parse_flags(meta: &CommandMeta, args: &[String]) -> ParsedFlags {
                         }
                         _ => {
                             if let Some(value) = iter.next() {
-                                parsed.flags.insert(def.key.into(), Value::String(value.clone()));
+                                parsed
+                                    .flags
+                                    .insert(def.key.into(), Value::String(value.clone()));
                             }
                         }
                     }
@@ -341,9 +346,7 @@ pub fn parse_flags(meta: &CommandMeta, args: &[String]) -> ParsedFlags {
                     Some(v) => v.to_string(),
                     None => iter.next().cloned().unwrap_or_default(),
                 };
-                parsed
-                    .flags
-                    .insert(def.key.into(), Value::String(value));
+                parsed.flags.insert(def.key.into(), Value::String(value));
             }
         }
     }

@@ -4,12 +4,9 @@ use crate::commands::command::{Command, CommandMeta};
 use crate::npm::Npm;
 use crate::utils::errors::Result;
 
-pub static META: CommandMeta = CommandMeta::new(
-    "get",
-    "Get a value from the npm configuration",
-)
-.with_usage(&["[<key> ...] (See `npm config`)"])
-.with_params(&["long"]);
+pub static META: CommandMeta = CommandMeta::new("get", "Get a value from the npm configuration")
+    .with_usage(&["[<key> ...] (See `npm config`)"])
+    .with_params(&["long"]);
 
 pub struct Get;
 

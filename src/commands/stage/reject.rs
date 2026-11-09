@@ -46,7 +46,9 @@ impl Command for StageReject {
         notice("", &[&format!("Rejecting staged package {stage_id}")]);
         warn(
             "",
-            &[&"Rejecting will permanently delete this staged publish record and tarball from the registry."],
+            &[
+                &"Rejecting will permanently delete this staged publish record and tarball from the registry.",
+            ],
         );
 
         otplease(npm, &opts, |_o| {

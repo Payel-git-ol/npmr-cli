@@ -59,7 +59,10 @@ impl Command for Update {
 
     fn exec(&mut self, npm: &mut (dyn Npm + '_), args: &[String]) -> Result<()> {
         let where_ = if npm.global() {
-            npm.global_dir().parent().map(Path::to_path_buf).unwrap_or_else(|| npm.prefix())
+            npm.global_dir()
+                .parent()
+                .map(Path::to_path_buf)
+                .unwrap_or_else(|| npm.prefix())
         } else {
             npm.prefix()
         };
@@ -71,7 +74,9 @@ impl Command for Update {
         if npm.store().get_int("depth") != 0 {
             warn(
                 "update",
-                &[&"The --depth option no longer has any effect. See RFC0019.\nhttps://github.com/npm/rfcs/blob/latest/implemented/0019-remove-update-depth-option.md"],
+                &[
+                    &"The --depth option no longer has any effect. See RFC0019.\nhttps://github.com/npm/rfcs/blob/latest/implemented/0019-remove-update-depth-option.md",
+                ],
             );
         }
         ArboristRun {
