@@ -118,9 +118,11 @@ pub fn parse_key(key: &str) -> Option<PolicyKey> {
     if key.starts_with("file:") || key.starts_with("git") || key.contains("://") {
         return Some(PolicyKey::Other(key.to_string()));
     }
-    let (name, spec) = match key.rfind('@') {
-        Some(0) | None => (key, None),
-        Some(idx) => (&key[..idx], Some(&key[idx + 1..])),
+    // `a@1.2.3||a@1.2.4` is one key naming several pins.
+    let alternatives: Vec<&str> = key.split("||").map(str::trim).collect();
+    let (name, spec) = match alternatives[0].rfind('@') {
+        Some(0) | None => (alternatives[0], None),
+        Some(idx) => (&alternatives[0][..idx], Some(&alternatives[0][idx + 1..])),
     };
     if name.is_empty() {
         return None;
@@ -132,8 +134,7 @@ pub fn parse_key(key: &str) -> Option<PolicyKey> {
         return Some(PolicyKey::Name(name.to_string()));
     }
     let mut versions = Vec::new();
-    for part in spec.split("||") {
-        let part = part.trim();
+    for part in &alternatives {
         let version = match part.rfind('@') {
             Some(idx) => &part[idx + 1..],
             None => part,

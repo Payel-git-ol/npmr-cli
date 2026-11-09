@@ -281,6 +281,9 @@ pub fn to_json(node: &Node) -> Value {
         "name": node.name,
         "version": node.version,
         "path": node.path,
+        "dev": node.dev,
+        "optional": node.optional,
+        "link": node.link,
     })
 }
 
@@ -353,7 +356,7 @@ mod tests {
     fn skips_dot_bin() {
         let root = tree();
         let all = query(&root, "*");
-        assert!(all.iter().any(|n| n.name == ".bin"));
+        assert!(all.iter().all(|n| n.name != ".bin"));
         let named = query(&root, "[name=a]");
         assert!(!named.iter().any(|n| n.name == ".bin"));
     }
