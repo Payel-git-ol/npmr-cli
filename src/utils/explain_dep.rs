@@ -37,7 +37,7 @@ pub struct ExplainNode {
 }
 
 impl ExplainNode {
-    fn type_label(&self, label: &str) -> Option<&str> {
+    fn type_label(&self, label: &'static str) -> Option<&'static str> {
         let flagged = match label {
             "extraneous" => self.extraneous,
             "dev" => self.dev,
@@ -99,7 +99,7 @@ fn explain_links_in(node: &ExplainNode, depth: i32, color: bool, seen: &mut BTre
     let messages: Vec<String> = node
         .links_in
         .iter()
-        .map(|link| explain_node(link, depth - 1, color, seen))
+        .map(|link| explain_node_inner(link, depth - 1, color, seen))
         .collect();
     indent(&format!("\n{}", messages.join("\n")))
 }
