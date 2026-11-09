@@ -156,6 +156,9 @@ impl Npm for WorkspaceContext<'_> {
     fn log_files(&self) -> &[std::path::PathBuf] {
         self.npm.log_files()
     }
+    fn child_env(&self) -> &std::collections::BTreeMap<String, String> {
+        self.npm.child_env()
+    }
     fn exec(&mut self, name: &str, args: &[String]) -> Result<()> {
         self.npm.exec(name, args)
     }

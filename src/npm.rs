@@ -119,6 +119,9 @@ pub trait Npm: Send + Sync {
             .ok_or_else(|| unknown_command(name))
     }
 
+    /// Environment exported to lifecycle and shellout children.
+    fn child_env(&self) -> &std::collections::BTreeMap<String, String>;
+
     /// Runs a nested command, e.g. `restart` → `run restart`.
     fn exec(&mut self, name: &str, args: &[String]) -> Result<()>;
 }
@@ -415,6 +418,9 @@ impl Npm for NpmCli {
     }
     fn log_files(&self) -> &[PathBuf] {
         self.log_file.files()
+    }
+    fn child_env(&self) -> &std::collections::BTreeMap<String, String> {
+        &self.child_env
     }
     fn exec(&mut self, name: &str, args: &[String]) -> Result<()> {
         self.run(name, args)
