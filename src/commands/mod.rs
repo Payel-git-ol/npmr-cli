@@ -155,13 +155,16 @@ pub fn meta_for(name: &str) -> Option<&'static CommandMeta> {
             team,
             test,
             token,
-            undeprecate,
             uninstall,
             unpublish,
             update,
             version,
             view,
             whoami,
+        );
+        map.insert(
+            deprecate::undeprecate_meta::META.name,
+            deprecate::undeprecate_meta::META.clone(),
         );
         map
     });
@@ -247,7 +250,7 @@ pub fn create(name: &str) -> Result<Box<dyn Command>> {
         "test" => Box::new(test::Test::new()),
         "token" => Box::new(token::Token::new()),
         "trust" => Box::new(trust::Trust::new()),
-        "undeprecate" => Box::new(undeprecate::Undeprecate::new()),
+        "undeprecate" => Box::new(deprecate::Deprecate::undeprecate()),
         "uninstall" => Box::new(uninstall::Uninstall::new()),
         "unpublish" => Box::new(unpublish::Unpublish::new()),
         "update" => Box::new(update::Update::new()),
